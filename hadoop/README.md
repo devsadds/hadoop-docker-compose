@@ -14,15 +14,17 @@ https://medium.com/@bayuadiwibowo/deploying-a-big-data-ecosystem-dockerized-hado
 Access all UIs using spawned firefox: http://localhost:5800/. All services uses default port, please find it from the respective documentation.
 
 
-## Дополнения
+## Требования 
 
+ - свободное место более 90 %
 
-namenode % wget https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.28/mysql-connector-java-8.0.28.jar
-namenode % mv mysql-connector-java-8.0.28.jar /opt/hive/lib/
+## Дополнения установка
 
+```sh
+curl -LO https://repo1.maven.org/maven2/org/postgresql/postgresql/42.2.5/postgresql-42.2.5.jar \
+    && mv postgresql-42.2.5.jar /opt/hive/lib/
+```
 
-namenode % tar zxvf apache-hive-3.1.3-bin.tar.gz
-namenode % mv apache-hive-3.1.3-bin /opt/hive
 
 ## Hadoop config
 
@@ -104,46 +106,17 @@ OEF
 
 ```
 
-## Spark conf
 
-curl -LO https://archive.apache.org/dist/spark/spark-3.5.0/spark-3.5.0-bin-hadoop3.tgz --no-check-certificate
-
-## Hive conf
-
-```sh
-
-curl -LO https://dlcdn.apache.org/hive/hive-3.1.3/apache-hive-3.1.3-bin.tar.gz
-```
-
-```sql
-CREATE DATABASE hive;
-CREATE USER hiveuser WITH PASSWORD 'hivepassword';
-GRANT ALL PRIVILEGES ON DATABASE hive TO hiveuser;
-```
+## Hive init 
 
 
-```sh
-cat <<'OEF'> hive-site.xml
-<configuration>
-    <property>
-        <name>javax.jdo.option.ConnectionURL</name>
-        <value>jdbc:postgresql://postgres:5432/hive</value>
-    </property>
-    <property>
-        <name>javax.jdo.option.ConnectionDriverName</name>
-        <value>org.postgresql.Driver</value>
-    </property>
-    <property>
-        <name>javax.jdo.option.ConnectionUserName</name>
-        <value>postgres</value>
-    </property>
-    <property>
-        <name>javax.jdo.option.ConnectionPassword</name>
-        <value>phahMMMddd999h7uutheePighMMMdsdsdss</value>
-    </property>
-</configuration>
-OEF
-```
+/opt/hive/bin/schematool -dbType postgres -initSchema
+
+
+
+### Envs
+
+export HADOOP_HOME=/opt/hadoop
 
 ### Urls
 
@@ -155,17 +128,60 @@ ResourceManager UI: http://resourcemanager:8088/
 
 ### Usage
 
-Submit Sample Job
+**Test hadoop**
 
+
+```sh
+hdfs dfs -mkdir /test_dir
+echo "Hello, Hadoop" | hdfs dfs -put - /test_dir/test_file.txt
+hdfs dfs -cat /test_dir/test_file.txt
+```
+
+**Submit Sample Job**
+
+```sh
+echo "hadoop mapreduce example example" | hdfs dfs -put - /test_dir/input.txt
+yarn jar $HADOOP_HOME/share/hadoop/mapreduce/hadoop-mapreduce-examples-3.3.5.jar wordcount /test_dir/input.txt /test_dir/output
+hdfs dfs -cat /test_dir/output/part-r-00000
+```
 
 ```sh
  docker exec -ti hadoop-namenode-1 /bin/bash
 yarn jar share/hadoop/mapreduce/hadoop-mapreduce-examples-${HADOOP_VERSION:-3.3.5}.jar pi 10 15
 ```
 
+**Submit Spark Job as examples**
+
+```sh
+/opt/spark/bin/spark-submit \
+--master yarn \
+--deploy-mode cluster \
+--class org.apache.spark.examples.SparkPi /opt/spark/examples/jars/spark-examples_2.12-3.5.0.jar
+```
+
+### MISC
+
+Load data into Hive:
+
+```sh
+  $ docker-compose exec hive-server bash
+  # /opt/hive/bin/beeline -u jdbc:hive2://localhost:10000
+  > CREATE TABLE pokes (foo INT, bar STRING);
+  > LOAD DATA LOCAL INPATH '/opt/hive/examples/files/kv1.txt' OVERWRITE INTO TABLE pokes;
+```
+
+Then query it from PrestoDB. You can get [presto.jar](https://prestosql.io/docs/current/installation/cli.html) from PrestoDB website:
+```sh
+  $ wget https://repo1.maven.org/maven2/io/prestosql/presto-cli/308/presto-cli-308-executable.jar
+  $ mv presto-cli-308-executable.jar presto.jar
+  $ chmod +x presto.jar
+  $ ./presto.jar --server localhost:8080 --catalog hive --schema default
+  presto
 
 ### MANS
 
 https://medium.com/@bayuadiwibowo/deploying-a-big-data-ecosystem-dockerized-hadoop-spark-hive-and-zeppelin-654014069c82
 
 https://github.com/bbonnin/docker-hadoop-3 - docker-haddop-3
+
+https://github.com/Marcel-Jan/docker-hadoop-spark

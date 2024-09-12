@@ -1,27 +1,58 @@
 version: "2"
 services:
 
+  hive-server:
+    image: hadoop:3.3.5-r1
+    env_file:
+      - ./hive-server.cfg
+
+    volumes:
+      - "./configs/hive/hive-site.xml:/opt/hive/conf/hive-site.xml"
+    environment:
+      HIVE_CORE_CONF_javax_jdo_option_ConnectionURL: "jdbc:postgresql://hive-metastore/metastore"
+      SERVICE_PRECONDITION: "hive-metastore:9083"
+    #entrypoint: /opt/hive/bin/hive --service hiveserver2
+    entrypoint: tail -f /dev/null
+    ports:
+      - "10000:10000"
+    networks:
+      hadoop:
 
   hive-metastore:
-    #image: registry.gitlab.com/devops-f/devops/postgresql:15.4.0.c
+    image: hadoop:3.3.5-r1
+    volumes:
+      - "./configs/hive/hive-site.xml:/opt/hive/conf/hive-site.xml"
+    env_file:
+      - ./hive-metastore.cfg
+    entrypoint: /opt/hive/bin/hive --service metastore
+    #entrypoint: tail -f /dev/null
+    environment:
+      SERVICE_PRECONDITION: "namenode:50070 datanode:50075 hive-metastore-postgresql:5432"
+    ports:
+      - "9083:9083"
+    networks:
+      hadoop:
+
+  hive-metastore-postgresql:
     image: docker-registry.services.linux2be.com:443/devops-f/devops/postgresql:15.4.0.c
     restart: always
     environment:
        POSTGRESQL_USERNAME: "postgres"
        POSTGRESQL_PASSWORD: "phahMMMddd999h7uutheePighMMMdsdsdss"
-       POSTGRESQL_DATABASE: "hive"
+       POSTGRESQL_DATABASE: "hive-metastore"
+       CONSUL_AGENT: "false"
+    ports:
+      - "35432:5432"
     volumes:
+      - "./configs/postgres:/opt/bitnami/postgresql/conf/conf.d"
       - "postgres-15-2-bitnami_data:/bitnami/postgresql"
     networks:
       hadoop:
         aliases:
           - postgres
 
-
   namenode:
-    #image: bayuadiwibowo/hadoop-namenode:latest
-    #image: docker-registry.services.linux2be.com:443/hadoop-namenode:latest
-    image: docker-registry.services.linux2be.com:443/bigdata/platform/docker-images/hadoop:3.3.5-r1
+    image: hadoop:3.3.5-r1
     hostname: namenode
     volumes:
       - ./Makefile:/opt/hadoop/Makefile
@@ -32,44 +63,22 @@ services:
     environment:
       ENSURE_NAMENODE_DIR: "/tmp/hadoop-root/dfs/name"
       HIVE_HOME: "/opt/hive"
-    #command: bash -c "make start-zeppelin && make start-namenode && make install-hive && make start-hive"
     command: ["hdfs", "namenode"]
     networks:
       hadoop:
 
+  datanode:
 
-
-  datanode_1:
-    #image: apache/hadoop:3.3.5
-    image: docker-registry.services.linux2be.com:443/bigdata/platform/docker-images/hadoop:3.3.5-r1
+    image: hadoop:3.3.5-r1
     command: [ "hdfs", "datanode" ]
     env_file:
       - ./env.cfg
     networks:
       hadoop:
-
-  datanode_2:
-    #image: apache/hadoop:3.3.5
-    image: docker-registry.services.linux2be.com:443/bigdata/platform/docker-images/hadoop:3.3.5-r1
-    command: [ "hdfs", "datanode" ]
-    env_file:
-      - ./env.cfg
-    networks:
-      hadoop:
-  
-  datanode_3:
-    #image: apache/hadoop:3.3.5
-    image: docker-registry.services.linux2be.com:443/bigdata/platform/docker-images/hadoop:3.3.5-r1
-    command: [ "hdfs", "datanode" ]
-    env_file:
-      - ./env.cfg
-    networks:
-      hadoop:
-
 
   resourcemanager:
     #image: apache/hadoop:3.3.5
-    image: docker-registry.services.linux2be.com:443/bigdata/platform/docker-images/hadoop:3.3.5-r1
+    image: hadoop:3.3.5-r1
     hostname: resourcemanager
     command: [ "yarn", "resourcemanager" ]
     ports:
@@ -81,7 +90,7 @@ services:
 
   nodemanager:
     #image: apache/hadoop:3.3.5
-    image: docker-registry.services.linux2be.com:443/bigdata/platform/docker-images/hadoop:3.3.5-r1
+    image: hadoop:3.3.5-r1
     command: [ "yarn", "nodemanager" ]
     env_file:
       - ./env.cfg
@@ -90,7 +99,7 @@ services:
 
   firefox:
     #image: jlesage/firefox
-    image: docker-registry.services.linux2be.com:443/bigdata/platform/docker-images/firefox:latest
+    image: firefox:latest
     hostname: firefox
     ports:
       - 5800:5800
