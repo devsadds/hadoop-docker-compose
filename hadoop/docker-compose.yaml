@@ -4,14 +4,15 @@ services:
   hive-server:
     image: hadoop:3.3.5-r1
     volumes:
-      #- "./configs/hive/hive-site.xml:/opt/hive/conf/hive-site.xml"
       - "./configs/hive/log4j.properties:/opt/hive/conf/log4j.properties"
+      #- hive_warehouse:/user/hive/warehouse
     env_file:
       - ./hive.cfg
     command: ["hive", "--service", "hiveserver2"]
-    #entrypoint: /opt/hive/bin/hive --service hiveserver2
     environment:
       PATH: '$PATH:/opt/hive/bin'
+      HADOOP_HOME: "/opt/hadoop"
+      HADOOP_CONF_DIR: "/opt/hive/conf"
     ports:
       - "10000:10000"
     networks:
@@ -22,12 +23,12 @@ services:
     env_file:
       - ./hive.cfg
     volumes:
-      #- "./configs/hive/hive-site.xml:/opt/hive/conf/hive-site.xml"
       - "./configs/hive/log4j.properties:/opt/hive/conf/log4j.properties"
     command: ["hive", "--service", "metastore"]
-    #entrypoint: /opt/hive/bin/hive --service metastore
     environment:
       PATH: '$PATH:/opt/hive/bin'
+      HADOOP_HOME: "/opt/hadoop"
+      HADOOP_CONF_DIR: "/opt/hive/conf"
     ports:
       - "9083:9083"
     networks:
@@ -69,6 +70,8 @@ services:
 
   datanode:
     image: hadoop:3.3.5-r1
+    volumes:
+      - hdfs_datanode:/data/hdfs
     command: [ "hdfs", "datanode" ]
     env_file:
       - ./hadoop.cfg
@@ -98,6 +101,6 @@ services:
 
 volumes:
   postgres-15-2-bitnami_data:
-
+  hdfs_datanode:
 networks:
   hadoop:

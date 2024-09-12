@@ -107,10 +107,22 @@ OEF
 ```
 
 
-## Hive init 
+## Hadoop prepare
+
+```sh
+docker exec -it hadoop-namenode-1 bash
+hdfs dfs -mkdir -p /user/hive/warehouse
+hdfs dfs -ls /user/hive/warehouse
+```
 
 
+## Hive Prepare 
+
+In hive-metastore
+```sh
 /opt/hive/bin/schematool -dbType postgres -initSchema
+```
+
 
 
 
@@ -193,6 +205,21 @@ Then query it from PrestoDB. You can get [presto.jar](https://prestosql.io/docs/
 ```
 
 
+####
+```sql
+create database mm_ods_sec1;
+USE mm_ods_sec1;
+CREATE TABLE my_test_tablesa0000mmprod (
+  id INT,
+  name STRING,
+  created_at TIMESTAMP
+);
+SHOW TABLES;
+INSERT INTO my_test_tablesa0000mmprod (id, name, created_at) VALUES (1, 'Alice', CURRENT_TIMESTAMP),(2, 'Bob', CURRENT_TIMESTAMP);
+SELECT * FROM my_test_tablesa0000mmprod;
+DESCRIBE my_test_tablesa0000mmprod;
+DROP TABLE my_test_tablesa0000mmprod;
+```
 ### MANS
 
 https://medium.com/@bayuadiwibowo/deploying-a-big-data-ecosystem-dockerized-hadoop-spark-hive-and-zeppelin-654014069c82
