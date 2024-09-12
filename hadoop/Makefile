@@ -10,12 +10,15 @@ install-python3:
 	sudo ln -s /usr/bin/python3 /usr/bin/python
 
 install-hive:
-	/opt/hive/bin/schematool -initSchema -dbType mysql
+	/opt/hive/bin/schematool -initSchema -dbType postgres
 	hdfs dfs -mkdir -p /user/hive/warehouse
 	hdfs dfs -mkdir -p /tmp/hive
 	hdfs dfs -chmod 777 /tmp/
 	hdfs dfs -chmod 777 /user/hive/warehouse
 	hdfs dfs -chmod 777 /tmp/hive
+
+
+start-hive:
 	/opt/hive/bin/hive --service hiveserver2
 
 start-namenode:
