@@ -3,16 +3,15 @@ services:
 
   hive-server:
     image: hadoop:3.3.5-r1
-    env_file:
-      - ./hive-server.cfg
-
     volumes:
-      - "./configs/hive/hive-site.xml:/opt/hive/conf/hive-site.xml"
-    environment:
-      HIVE_CORE_CONF_javax_jdo_option_ConnectionURL: "jdbc:postgresql://hive-metastore/metastore"
-      SERVICE_PRECONDITION: "hive-metastore:9083"
+      #- "./configs/hive/hive-site.xml:/opt/hive/conf/hive-site.xml"
+      - "./configs/hive/log4j.properties:/opt/hive/conf/log4j.properties"
+    env_file:
+      - ./hive.cfg
+    command: ["hive", "--service", "hiveserver2"]
     #entrypoint: /opt/hive/bin/hive --service hiveserver2
-    entrypoint: tail -f /dev/null
+    environment:
+      PATH: '$PATH:/opt/hive/bin'
     ports:
       - "10000:10000"
     networks:
@@ -20,14 +19,15 @@ services:
 
   hive-metastore:
     image: hadoop:3.3.5-r1
-    volumes:
-      - "./configs/hive/hive-site.xml:/opt/hive/conf/hive-site.xml"
     env_file:
-      - ./hive-metastore.cfg
-    entrypoint: /opt/hive/bin/hive --service metastore
-    #entrypoint: tail -f /dev/null
+      - ./hive.cfg
+    volumes:
+      #- "./configs/hive/hive-site.xml:/opt/hive/conf/hive-site.xml"
+      - "./configs/hive/log4j.properties:/opt/hive/conf/log4j.properties"
+    command: ["hive", "--service", "metastore"]
+    #entrypoint: /opt/hive/bin/hive --service metastore
     environment:
-      SERVICE_PRECONDITION: "namenode:50070 datanode:50075 hive-metastore-postgresql:5432"
+      PATH: '$PATH:/opt/hive/bin'
     ports:
       - "9083:9083"
     networks:
@@ -59,7 +59,7 @@ services:
     ports:
       - 9870:9870
     env_file:
-      - ./env.cfg
+      - ./hadoop.cfg
     environment:
       ENSURE_NAMENODE_DIR: "/tmp/hadoop-root/dfs/name"
       HIVE_HOME: "/opt/hive"
@@ -68,11 +68,10 @@ services:
       hadoop:
 
   datanode:
-
     image: hadoop:3.3.5-r1
     command: [ "hdfs", "datanode" ]
     env_file:
-      - ./env.cfg
+      - ./hadoop.cfg
     networks:
       hadoop:
 
@@ -84,7 +83,7 @@ services:
     ports:
       - 8088:8088
     env_file:
-      - ./env.cfg
+      - ./hadoop.cfg
     networks:
       hadoop:
 
@@ -93,22 +92,12 @@ services:
     image: hadoop:3.3.5-r1
     command: [ "yarn", "nodemanager" ]
     env_file:
-      - ./env.cfg
-    networks:
-      hadoop:
-
-  firefox:
-    #image: jlesage/firefox
-    image: firefox:latest
-    hostname: firefox
-    ports:
-      - 5800:5800
+      - ./hadoop.cfg
     networks:
       hadoop:
 
 volumes:
   postgres-15-2-bitnami_data:
-
 
 networks:
   hadoop:

@@ -165,7 +165,7 @@ Load data into Hive:
 
 ```sh
   $ docker-compose exec hive-server bash
-  # /opt/hive/bin/beeline -u jdbc:hive2://localhost:10000
+  # /opt/hive/bin/beeline -u jdbc:hive2://127.0.0.1:10000
   > CREATE TABLE pokes (foo INT, bar STRING);
   > LOAD DATA LOCAL INPATH '/opt/hive/examples/files/kv1.txt' OVERWRITE INTO TABLE pokes;
 ```
@@ -177,6 +177,21 @@ Then query it from PrestoDB. You can get [presto.jar](https://prestosql.io/docs/
   $ chmod +x presto.jar
   $ ./presto.jar --server localhost:8080 --catalog hive --schema default
   presto
+
+```json
+          "Image": "hadoop:3.3.5-r1",
+            "Volumes": {
+                "/data": {}
+            },
+            "WorkingDir": "/opt/hadoop",
+            "Entrypoint": [
+                "/usr/local/bin/dumb-init",
+                "--",
+                "/opt/starter.sh"
+            ],
+
+```
+
 
 ### MANS
 
