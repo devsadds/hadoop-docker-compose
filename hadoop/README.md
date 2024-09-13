@@ -168,7 +168,12 @@ yarn jar share/hadoop/mapreduce/hadoop-mapreduce-examples-${HADOOP_VERSION:-3.3.
 /opt/spark/bin/spark-submit \
 --master yarn \
 --deploy-mode cluster \
---class org.apache.spark.examples.SparkPi /opt/spark/examples/jars/spark-examples_2.12-3.5.0.jar
+--class org.apache.spark.examples.SparkPi /opt/spark/examples/jars/spark-examples_2.12-3.5.2.jar
+
+
+spark-submit --master yarn --deploy-mode cluster --class org.apache.spark.examples.SparkPi /opt/spark/examples/jars/spark-examples_2.12-3.5.2.jar
+
+
 ```
 
 ### MISC
@@ -227,3 +232,6 @@ https://medium.com/@bayuadiwibowo/deploying-a-big-data-ecosystem-dockerized-hado
 https://github.com/bbonnin/docker-hadoop-3 - docker-haddop-3
 
 https://github.com/Marcel-Jan/docker-hadoop-spark
+
+
+https://github.com/devsadds/openldap-kerberos-auth - openldap-kerberos-auth 

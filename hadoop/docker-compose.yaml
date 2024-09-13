@@ -5,12 +5,12 @@ services:
     image: hadoop:3.3.5-r1
     volumes:
       - "./configs/hive/log4j.properties:/opt/hive/conf/log4j.properties"
-      #- hive_warehouse:/user/hive/warehouse
+      - "./test:/tmp/test"
     env_file:
       - ./hive.cfg
     command: ["hive", "--service", "hiveserver2"]
     environment:
-      PATH: '$PATH:/opt/hive/bin'
+      PATH: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/hadoop/bin:/opt/hive/bin:/opt/spark/bin'
       HADOOP_HOME: "/opt/hadoop"
       HADOOP_CONF_DIR: "/opt/hive/conf"
     ports:
@@ -26,11 +26,28 @@ services:
       - "./configs/hive/log4j.properties:/opt/hive/conf/log4j.properties"
     command: ["hive", "--service", "metastore"]
     environment:
-      PATH: '$PATH:/opt/hive/bin'
+      PATH: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/hadoop/bin:/opt/hive/bin:/opt/spark/bin'
       HADOOP_HOME: "/opt/hadoop"
       HADOOP_CONF_DIR: "/opt/hive/conf"
     ports:
       - "9083:9083"
+    networks:
+      hadoop:
+
+  hive-metastore-init:
+    image: hadoop:3.3.5-r1
+    restart: no
+    depends_on:
+      - hive-metastore-postgresql
+    env_file:
+      - ./hive.cfg
+    volumes:
+      - "./configs/hive/log4j.properties:/opt/hive/conf/log4j.properties"
+    command: ["/opt/hive/bin/schematool", "-dbType", "postgres", "-initSchema", "--verbose"]
+    environment:
+      PATH: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/hadoop/bin:/opt/hive/bin:/opt/spark/bin'
+      HADOOP_HOME: "/opt/hadoop"
+      HADOOP_CONF_DIR: "/opt/hive/conf"
     networks:
       hadoop:
 
@@ -79,7 +96,6 @@ services:
       hadoop:
 
   resourcemanager:
-    #image: apache/hadoop:3.3.5
     image: hadoop:3.3.5-r1
     hostname: resourcemanager
     command: [ "yarn", "resourcemanager" ]
@@ -91,7 +107,6 @@ services:
       hadoop:
 
   nodemanager:
-    #image: apache/hadoop:3.3.5
     image: hadoop:3.3.5-r1
     command: [ "yarn", "nodemanager" ]
     env_file:
@@ -99,8 +114,61 @@ services:
     networks:
       hadoop:
 
+  spark-master:
+    image: hadoop:3.3.5-r1
+    volumes:
+        - "./configs/spark/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf"
+        - "./configs/spark/spark-env.sh:/opt/spark/conf/spark-env.sh"
+    command: [ "spark-class", "org.apache.spark.deploy.master.Master" ]
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+    env_file:
+      - ./hadoop.cfg
+    environment:
+      PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/hadoop/bin:/opt/spark/bin"
+      HADOOP_HOME: "/opt/hadoop"
+      HADOOP_CONF_DIR: "/opt/spark/conf"
+    networks:
+      hadoop:
+
+  spark-worker:
+    image: hadoop:3.3.5-r1
+    volumes:
+        - "./configs/spark/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf"
+        - "./configs/spark/spark-env.sh:/opt/spark/conf/spark-env.sh"
+    command: [ "spark-class", "org.apache.spark.deploy.worker.Worker" , "spark://spark-master:7077"]
+    depends_on:
+      - spark-master
+    ports:
+      - "8081:8081"
+    env_file:
+      - ./hadoop.cfg
+    environment:
+      PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/hadoop/bin:/opt/spark/bin"
+      HADOOP_HOME: "/opt/hadoop"
+      HADOOP_CONF_DIR: "/opt/spark/conf"
+    networks:
+      hadoop:
+
+  historyserver:
+    image: hadoop:3.3.5-r1
+    command: [ "yarn", "historyserver" ]
+    volumes:
+      - hdfs_historyserver:/data/hdfs/
+    ports:
+      - 8188:8188
+    env_file:
+      - ./hadoop.cfg
+    environment:
+      PATH: "/opt/spark/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/hadoop/bin"
+
+    networks:
+      hadoop:
+
 volumes:
   postgres-15-2-bitnami_data:
   hdfs_datanode:
+  hdfs_historyserver:
 networks:
   hadoop:

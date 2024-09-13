@@ -1,29 +1,27 @@
-install-spark:
-	sudo wget https://archive.apache.org/dist/spark/spark-3.5.0/spark-3.5.0-bin-hadoop3.tgz --no-check-certificate
-	mkdir /opt/spark
-	mv spark-3.5.0-bin-hadoop3.tgz /opt/spark/
-	tar -zxvf /opt/spark/spark-3.5.0-bin-hadoop3.tgz -C /opt/spark
+all: hadoop_first_start hadoop_init
+hadoop_first_start:
+	docker-compose up -d hive-metastore-postgresql; sleep 5; docker-compose up -d hive-metastore-init
+	docker-compose up -d
+	sleep 10;
 
-install-python3:
-	sudo yum install -y python3
-	sudo unlink /usr/bin/python
-	sudo ln -s /usr/bin/python3 /usr/bin/python
+hadoop_init:
+	docker exec -ti -u 0 hadoop-datanode-1 bash -c "chown -Rv hadoop:hadoop /data/hdfs"
+	docker exec -it hadoop-namenode-1 bash -c "hdfs dfs -mkdir -p /user/hive/warehouse"
+	docker exec -ti hadoop-datanode-1 bash -c "hdfs dfs -ls /user/hive/warehouse"
+	docker exec -it hadoop-namenode-1 bash -c "hdfs dfs -mkdir -p /user/spark/jars"
+	docker exec -it hadoop-namenode-1 bash -c "hdfs dfs -put /opt/spark/jars/* /user/spark/jars/"
 
-install-hive:
-	/opt/hive/bin/schematool -initSchema -dbType postgres
-	hdfs dfs -mkdir -p /user/hive/warehouse
-	hdfs dfs -mkdir -p /tmp/hive
-	hdfs dfs -chmod 777 /tmp/
-	hdfs dfs -chmod 777 /user/hive/warehouse
-	hdfs dfs -chmod 777 /tmp/hive
+	sleep 5;
+	docker-compose down hive-server; docker-compose up -d hive-server
+
+testhive:
+	docker exec -it hadoop-hive-server-1 bash -c "/opt/hive/bin/beeline -u jdbc:hive2://hive-server:10000 -f /tmp/test/script.sql"
+
+connect:
+	docker exec -it hadoop-hive-server-1 bash -c "/opt/hive/bin/beeline -u jdbc:hive2://hive-server:10000"
+testspark:
+	docker exec -it hadoop-spark-master-1 bash -c "spark-submit --master yarn --deploy-mode cluster --class org.apache.spark.examples.SparkPi /opt/spark/examples/jars/spark-examples_2.12-3.5.2.jar"
 
 
-start-hive:
-	/opt/hive/bin/hive --service hiveserver2
-
-start-namenode:
-	hdfs namenode &
-	sleep 30
-
-start-zeppelin:
-	/opt/zeppelin/bin/zeppelin-daemon.sh start
+clean:
+	docker-compose down -v

@@ -1,0 +1,9 @@
+export SPARK_MASTER_HOST='0.0.0.0'
+export SPARK_MASTER_PORT=7077
+export SPARK_MASTER_WEBUI_PORT=8080
+export SPARK_WORKER_WEBUI_PORT=8081
+export SPARK_WORKER_MEMORY=6g
+export SPARK_WORKER_CORES=4
+export HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop
+export HADOOP_HOME=/opt/hadoop
+export SPARK_DIST_CLASSPATH=$(hadoop classpath)
