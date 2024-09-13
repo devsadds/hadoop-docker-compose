@@ -2,18 +2,23 @@ all: hadoop_first_start hadoop_init
 hadoop_first_start:
 	docker-compose up -d hive-metastore-postgresql; sleep 5; docker-compose up -d hive-metastore-init
 	docker-compose up -d
-	sleep 10;
+	sleep 15;
 
 hadoop_init:
-	docker exec -ti -u 0 hadoop-datanode-1 bash -c "chown -Rv hadoop:hadoop /data/hdfs"
+	docker exec -ti -u 0 hadoop-datanode-1 bash -c "chown -Rv hadoop:users /data/hdfs"
 	docker exec -it hadoop-namenode-1 bash -c "hdfs dfs -mkdir -p /user/hive/warehouse"
-	docker exec -ti hadoop-datanode-1 bash -c "hdfs dfs -ls /user/hive/warehouse"
+	docker exec -ti hadoop-namenode-1 bash -c "hdfs dfs -ls /user/hive/warehouse"
 	docker exec -it hadoop-namenode-1 bash -c "hdfs dfs -mkdir -p /user/spark/jars"
-	docker exec -it hadoop-namenode-1 bash -c "hdfs dfs -put /opt/spark/jars/* /user/spark/jars/"
-
+	docker exec -it hadoop-namenode-1 bash -c "hdfs dfs -mkdir -p /user/spark/spark-events"
+	docker exec -it hadoop-namenode-1 bash -c "hdfs dfs -mkdir -p /user/hadoop/.sparkStaging"
+	#docker exec -it hadoop-namenode-1 bash -c "hdfs dfs -put /opt/spark/jars/* /user/spark/jars/"
+	docker exec -ti hadoop-namenode-1 bash -c "hdfs dfs -ls /user/spark/jars/"
 	sleep 5;
 	docker-compose down hive-server; docker-compose up -d hive-server
-
+	docker exec -ti hadoop-namenode-1 bash -c "hdfs dfs -ls /user/hadoop/.sparkStaging"
+	docker-compose stop spark-master;
+	docker-compose stop spark-worker;
+	docker-compose up -d ;
 testhive:
 	docker exec -it hadoop-hive-server-1 bash -c "/opt/hive/bin/beeline -u jdbc:hive2://hive-server:10000 -f /tmp/test/script.sql"
 

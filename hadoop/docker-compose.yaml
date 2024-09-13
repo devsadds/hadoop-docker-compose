@@ -6,6 +6,9 @@ services:
     volumes:
       - "./configs/hive/log4j.properties:/opt/hive/conf/log4j.properties"
       - "./test:/tmp/test"
+      - "./configs/spark/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf"
+      - "./configs/spark/spark-env.sh:/opt/spark/conf/spark-env.sh"
+      - spark_staging:/opt/hadoop/.sparkStaging
     env_file:
       - ./hive.cfg
     command: ["hive", "--service", "hiveserver2"]
@@ -24,6 +27,9 @@ services:
       - ./hive.cfg
     volumes:
       - "./configs/hive/log4j.properties:/opt/hive/conf/log4j.properties"
+      - "./test:/tmp/test"
+      - "./configs/spark/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf"
+      - "./configs/spark/spark-env.sh:/opt/spark/conf/spark-env.sh"
     command: ["hive", "--service", "metastore"]
     environment:
       PATH: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/hadoop/bin:/opt/hive/bin:/opt/spark/bin'
@@ -74,6 +80,7 @@ services:
     hostname: namenode
     volumes:
       - ./Makefile:/opt/hadoop/Makefile
+      - hdfs_datanode:/data/hdfs
     ports:
       - 9870:9870
     env_file:
@@ -87,8 +94,11 @@ services:
 
   datanode:
     image: hadoop:3.3.5-r1
+    hostname: datanode
     volumes:
       - hdfs_datanode:/data/hdfs
+      - spark_staging:/opt/hadoop/.sparkStaging
+    #entrypoint: tail -f /dev/null
     command: [ "hdfs", "datanode" ]
     env_file:
       - ./hadoop.cfg
@@ -98,6 +108,8 @@ services:
   resourcemanager:
     image: hadoop:3.3.5-r1
     hostname: resourcemanager
+    volumes:
+      - spark_staging:/opt/hadoop/.sparkStaging
     command: [ "yarn", "resourcemanager" ]
     ports:
       - 8088:8088
@@ -108,6 +120,9 @@ services:
 
   nodemanager:
     image: hadoop:3.3.5-r1
+    hostname: nodemanager
+    volumes:
+      - spark_staging:/opt/hadoop/.sparkStaging
     command: [ "yarn", "nodemanager" ]
     env_file:
       - ./hadoop.cfg
@@ -116,6 +131,7 @@ services:
 
   spark-master:
     image: hadoop:3.3.5-r1
+    hostname: spark-master
     volumes:
         - "./configs/spark/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf"
         - "./configs/spark/spark-env.sh:/opt/spark/conf/spark-env.sh"
@@ -128,12 +144,12 @@ services:
     environment:
       PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/hadoop/bin:/opt/spark/bin"
       HADOOP_HOME: "/opt/hadoop"
-      HADOOP_CONF_DIR: "/opt/spark/conf"
     networks:
       hadoop:
 
   spark-worker:
     image: hadoop:3.3.5-r1
+    hostname: spark-worker
     volumes:
         - "./configs/spark/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf"
         - "./configs/spark/spark-env.sh:/opt/spark/conf/spark-env.sh"
@@ -147,7 +163,6 @@ services:
     environment:
       PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/hadoop/bin:/opt/spark/bin"
       HADOOP_HOME: "/opt/hadoop"
-      HADOOP_CONF_DIR: "/opt/spark/conf"
     networks:
       hadoop:
 
@@ -170,5 +185,7 @@ volumes:
   postgres-15-2-bitnami_data:
   hdfs_datanode:
   hdfs_historyserver:
+  spark_staging:
+
 networks:
   hadoop:

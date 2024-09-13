@@ -225,6 +225,18 @@ SELECT * FROM my_test_tablesa0000mmprod;
 DESCRIBE my_test_tablesa0000mmprod;
 DROP TABLE my_test_tablesa0000mmprod;
 ```
+
+### Errors
+
+1. `is in an inconsistent state: file VERSION is invalid`
+
+Решение - должны быть одинакова - берем в namenode = > datanode
+```
+cat /data/hdfs/datanode/current/VERSION /data/hdfs/namenode/current/VERSION | grep clusterID
+clusterID=CID-1bd08dd1-4f04-4609-979e-6df11648feee
+clusterID=CID-1bd08dd1-4f04-4609-979e-6df11648feee
+```
+
 ### MANS
 
 https://medium.com/@bayuadiwibowo/deploying-a-big-data-ecosystem-dockerized-hadoop-spark-hive-and-zeppelin-654014069c82
