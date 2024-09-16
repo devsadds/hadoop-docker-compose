@@ -11,8 +11,9 @@ hadoop_init:
 	docker exec -it ubuntu-based-namenode-1 bash -c "hdfs dfs -mkdir -p /tmp/hive"
 	docker exec -it ubuntu-based-namenode-1 bash -c "hdfs dfs -chmod 777 /tmp/"
 	docker exec -it ubuntu-based-namenode-1 bash -c "hdfs dfs -chmod 777 /user/hive/warehouse"
-	docker exec -it ubuntu-based-namenode-1 bash -c "hdfs dfs -chmod 777 /tmp/hive"
 	docker exec -ti ubuntu-based-namenode-1 bash -c "hdfs dfs -ls /user/hive/warehouse"
+	docker exec -it ubuntu-based-namenode-1 bash -c "hdfs dfs -chmod 777 /tmp/hive"
+	
 	docker exec -it ubuntu-based-namenode-1 bash -c "hdfs dfs -mkdir -p /user/spark/jars"
 	docker exec -it ubuntu-based-namenode-1 bash -c "hdfs dfs -mkdir -p /user/spark/spark-events"
 	docker exec -it ubuntu-based-namenode-1 bash -c "hdfs dfs -mkdir -p /user/hadoop/.sparkStaging"
