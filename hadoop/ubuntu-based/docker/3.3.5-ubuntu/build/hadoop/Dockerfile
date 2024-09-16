@@ -1,6 +1,6 @@
 
 FROM apache/hadoop:3.3.5 AS hadoop
-FROM ubuntu-jammy:v1.0.0
+FROM docker-registry.services.linux2be.com:443/bigdata/platform/docker-images/ubuntu-jammy:v1.0.0
 USER root
 RUN apt-get update \
     && apt-get install -y openjdk-8-jdk openjdk-8-jre  python3 sudo dumb-init  -y
