@@ -16,6 +16,7 @@ services:
     env_file:
       - ./hive.cfg
     command: ["hive", "--service", "hiveserver2"]
+    #entrypoint: tail -f /dev/null
     environment:
       PATH: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/hadoop/bin:/opt/hive/bin:/opt/spark/bin'
       HADOOP_HOME: "/opt/hadoop"
@@ -24,6 +25,10 @@ services:
       - "10000:10000"
     networks:
       hadoop:
+    depends_on:
+      - hive-metastore
+
+
 
   hive-metastore:
     image: hadoop:3.3.5-ubuntu-r1
@@ -45,8 +50,13 @@ services:
       HADOOP_CONF_DIR: "/opt/hive/conf"
     ports:
       - "9083:9083"
+    depends_on:
+      - hive-metastore-postgresql
+    
     networks:
       hadoop:
+        aliases:
+          - odin-ha.omsk.linux2be.com
 
   hive-metastore-init:
     image: hadoop:3.3.5-ubuntu-r1
@@ -108,7 +118,7 @@ services:
 
   datanode:
     image: hadoop:3.3.5-ubuntu-r1
-    restart: always
+    restart: no
     hostname: datanode
     volumes:
       - hdfs_datanode:/data/hdfs
@@ -123,7 +133,7 @@ services:
 
   resourcemanager:
     image: hadoop:3.3.5-ubuntu-r1
-    restart: always
+    restart: no
     hostname: resourcemanager
     volumes:
       - spark_staging:/opt/hadoop/.sparkStaging
@@ -139,7 +149,7 @@ services:
 
   nodemanager:
     image: hadoop:3.3.5-ubuntu-r1
-    restart: always
+    restart: no
     hostname: nodemanager
     volumes:
       - spark_staging:/opt/hadoop/.sparkStaging
@@ -197,6 +207,7 @@ services:
     image: hadoop:3.3.5-ubuntu-r1
     restart: always
     command: [ "yarn", "historyserver" ]
+    entrypoint: tail -f /dev/null
     volumes:
       - "./configs/krb/krb5.conf:/etc/krb5.conf"
       - hdfs_historyserver:/data/hdfs/
@@ -259,7 +270,8 @@ services:
       KRB5_KDC_PASSWORD: "krb5"
     domainname: omsk.linux2be.com
     #command: ["krb5kdc", "-d", "/var/lib/krb5kdc/database", "-n" ]
-    entrypoint: tail -f /dev/null
+    command: ["krb5kdc", "-n" ]
+    #entrypoint: tail -f /dev/null
     restart: always
     ports:
       - "88:88"
@@ -270,6 +282,7 @@ services:
       hadoop:
         aliases:
           - kerberos.omsk.linux2be.com
+          - omsk.linux2be.com
 
 
 volumes:

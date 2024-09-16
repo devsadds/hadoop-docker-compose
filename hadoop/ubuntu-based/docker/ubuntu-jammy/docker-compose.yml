@@ -1,0 +1,9 @@
+version: '3.4'
+services:
+  ubuntu-jammy:
+    image: ubuntu-jammy:v1.0.0
+    build: 
+      context: build/ubuntu-jammy/.
+      args:
+        DOCKER_IMAGE_BASE: "ubuntu:jammy"
+        network: host
