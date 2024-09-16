@@ -2,9 +2,11 @@ version: "2"
 services:
 
   hive-server:
-    image: hadoop:3.3.5-r1
+    image: hadoop:3.3.5-ubuntu-r1
+    restart: always
     volumes:
       - "./configs/hive/log4j.properties:/opt/hive/conf/log4j.properties"
+      - "./configs/hive/hive-env.sh:/opt/hive/conf/hive-env.sh"
       - "./test:/tmp/test"
       - "./configs/spark/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf"
       - "./configs/spark/spark-env.sh:/opt/spark/conf/spark-env.sh"
@@ -22,11 +24,13 @@ services:
       hadoop:
 
   hive-metastore:
-    image: hadoop:3.3.5-r1
+    image: hadoop:3.3.5-ubuntu-r1
+    restart: always
     env_file:
       - ./hive.cfg
     volumes:
       - "./configs/hive/log4j.properties:/opt/hive/conf/log4j.properties"
+      - "./configs/hive/hive-env.sh:/opt/hive/conf/hive-env.sh"
       - "./test:/tmp/test"
       - "./configs/spark/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf"
       - "./configs/spark/spark-env.sh:/opt/spark/conf/spark-env.sh"
@@ -41,7 +45,7 @@ services:
       hadoop:
 
   hive-metastore-init:
-    image: hadoop:3.3.5-r1
+    image: hadoop:3.3.5-ubuntu-r1
     restart: no
     depends_on:
       - hive-metastore-postgresql
@@ -49,7 +53,7 @@ services:
       - ./hive.cfg
     volumes:
       - "./configs/hive/log4j.properties:/opt/hive/conf/log4j.properties"
-    command: ["/opt/hive/bin/schematool", "-dbType", "postgres", "-initSchema", "--verbose"]
+    command: ["/opt/hive/bin/schematool", "-dbType", "postgres", "-initSchema", "--verbose" ]
     environment:
       PATH: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/hadoop/bin:/opt/hive/bin:/opt/spark/bin'
       HADOOP_HOME: "/opt/hadoop"
@@ -76,7 +80,8 @@ services:
           - postgres
 
   namenode:
-    image: hadoop:3.3.5-r1
+    image: hadoop:3.3.5-ubuntu-r1
+    restart: always
     hostname: namenode
     volumes:
       - ./Makefile:/opt/hadoop/Makefile
@@ -86,14 +91,16 @@ services:
     env_file:
       - ./hadoop.cfg
     environment:
-      ENSURE_NAMENODE_DIR: "/tmp/hadoop-root/dfs/name"
+      ENSURE_NAMENODE_DIR: "/data/hdfs/namenode"
+      # ENSURE_NAMENODE_CLUSTERID
       HIVE_HOME: "/opt/hive"
     command: ["hdfs", "namenode"]
     networks:
       hadoop:
 
   datanode:
-    image: hadoop:3.3.5-r1
+    image: hadoop:3.3.5-ubuntu-r1
+    restart: always
     hostname: datanode
     volumes:
       - hdfs_datanode:/data/hdfs
@@ -106,7 +113,8 @@ services:
       hadoop:
 
   resourcemanager:
-    image: hadoop:3.3.5-r1
+    image: hadoop:3.3.5-ubuntu-r1
+    restart: always
     hostname: resourcemanager
     volumes:
       - spark_staging:/opt/hadoop/.sparkStaging
@@ -119,7 +127,8 @@ services:
       hadoop:
 
   nodemanager:
-    image: hadoop:3.3.5-r1
+    image: hadoop:3.3.5-ubuntu-r1
+    restart: always
     hostname: nodemanager
     volumes:
       - spark_staging:/opt/hadoop/.sparkStaging
@@ -130,7 +139,8 @@ services:
       hadoop:
 
   spark-master:
-    image: hadoop:3.3.5-r1
+    image: hadoop:3.3.5-ubuntu-r1
+    restart: always
     hostname: spark-master
     volumes:
         - "./configs/spark/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf"
@@ -148,7 +158,8 @@ services:
       hadoop:
 
   spark-worker:
-    image: hadoop:3.3.5-r1
+    image: hadoop:3.3.5-ubuntu-r1
+    restart: always
     hostname: spark-worker
     volumes:
         - "./configs/spark/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf"
@@ -167,7 +178,8 @@ services:
       hadoop:
 
   historyserver:
-    image: hadoop:3.3.5-r1
+    image: hadoop:3.3.5-ubuntu-r1
+    restart: always
     command: [ "yarn", "historyserver" ]
     volumes:
       - hdfs_historyserver:/data/hdfs/

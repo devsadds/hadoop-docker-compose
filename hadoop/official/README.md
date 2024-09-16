@@ -247,3 +247,5 @@ https://github.com/Marcel-Jan/docker-hadoop-spark
 
 
 https://github.com/devsadds/openldap-kerberos-auth - openldap-kerberos-auth 
+
+https://github.com/MobileTeleSystems/hadoop-docker/blob/main/yarn/conf/hadoop/yarn-site.xml
