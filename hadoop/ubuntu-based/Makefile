@@ -33,5 +33,9 @@ testspark:
 	docker exec -it ubuntu-based-spark-master-1 bash -c "spark-submit --master yarn --deploy-mode cluster --class org.apache.spark.examples.SparkPi /opt/spark/examples/jars/spark-examples_2.12-3.5.2.jar"
 
 
+build:
+	cd docker/3.3.5-ubuntu/ && make all
+	cd ../..
+
 clean:
 	docker-compose down -v
