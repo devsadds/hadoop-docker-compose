@@ -11,6 +11,8 @@ services:
       - "./configs/spark/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf"
       - "./configs/spark/spark-env.sh:/opt/spark/conf/spark-env.sh"
       - spark_staging:/opt/hadoop/.sparkStaging
+      - "./configs/keytabs:/opt/keytabs"
+      - "./configs/krb/krb5.conf:/etc/krb5.conf"
     env_file:
       - ./hive.cfg
     command: ["hive", "--service", "hiveserver2"]
@@ -34,6 +36,8 @@ services:
       - "./test:/tmp/test"
       - "./configs/spark/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf"
       - "./configs/spark/spark-env.sh:/opt/spark/conf/spark-env.sh"
+      - "./configs/keytabs:/opt/keytabs"
+      - "./configs/krb/krb5.conf:/etc/krb5.conf"
     command: ["hive", "--service", "metastore"]
     environment:
       PATH: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/hadoop/bin:/opt/hive/bin:/opt/spark/bin'
@@ -47,12 +51,14 @@ services:
   hive-metastore-init:
     image: hadoop:3.3.5-ubuntu-r1
     restart: no
+    volumes:
+      - "./configs/hive/log4j.properties:/opt/hive/conf/log4j.properties"
+      - "./configs/keytabs:/opt/keytabs"
+      - "./configs/krb/krb5.conf:/etc/krb5.conf"
     depends_on:
       - hive-metastore-postgresql
     env_file:
       - ./hive.cfg
-    volumes:
-      - "./configs/hive/log4j.properties:/opt/hive/conf/log4j.properties"
     command: ["/opt/hive/bin/schematool", "-dbType", "postgres", "-initSchema", "--verbose" ]
     environment:
       PATH: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/hadoop/bin:/opt/hive/bin:/opt/spark/bin'
@@ -64,6 +70,9 @@ services:
   hive-metastore-postgresql:
     image: docker-registry.services.linux2be.com:443/devops-f/devops/postgresql:15.4.0.c
     restart: always
+    volumes:
+      - "./configs/postgres:/opt/bitnami/postgresql/conf/conf.d"
+      - "postgres-15-2-bitnami_data:/bitnami/postgresql"
     environment:
        POSTGRESQL_USERNAME: "postgres"
        POSTGRESQL_PASSWORD: "phahMMMddd999h7uutheePighMMMdsdsdss"
@@ -71,9 +80,6 @@ services:
        CONSUL_AGENT: "false"
     ports:
       - "35432:5432"
-    volumes:
-      - "./configs/postgres:/opt/bitnami/postgresql/conf/conf.d"
-      - "postgres-15-2-bitnami_data:/bitnami/postgresql"
     networks:
       hadoop:
         aliases:
@@ -86,6 +92,8 @@ services:
     volumes:
       - ./Makefile:/opt/hadoop/Makefile
       - hdfs_datanode:/data/hdfs
+      - "./configs/keytabs:/opt/keytabs"
+      - "./configs/krb/krb5.conf:/etc/krb5.conf"
     ports:
       - 9870:9870
     env_file:
@@ -105,7 +113,8 @@ services:
     volumes:
       - hdfs_datanode:/data/hdfs
       - spark_staging:/opt/hadoop/.sparkStaging
-    #entrypoint: tail -f /dev/null
+      - "./configs/keytabs:/opt/keytabs"
+      - "./configs/krb/krb5.conf:/etc/krb5.conf"
     command: [ "hdfs", "datanode" ]
     env_file:
       - ./hadoop.cfg
@@ -118,6 +127,8 @@ services:
     hostname: resourcemanager
     volumes:
       - spark_staging:/opt/hadoop/.sparkStaging
+      - "./configs/keytabs:/opt/keytabs"
+      - "./configs/krb/krb5.conf:/etc/krb5.conf"
     command: [ "yarn", "resourcemanager" ]
     ports:
       - 8088:8088
@@ -132,6 +143,7 @@ services:
     hostname: nodemanager
     volumes:
       - spark_staging:/opt/hadoop/.sparkStaging
+      - "./configs/keytabs:/opt/keytabs"
     command: [ "yarn", "nodemanager" ]
     env_file:
       - ./hadoop.cfg
@@ -143,8 +155,10 @@ services:
     restart: always
     hostname: spark-master
     volumes:
-        - "./configs/spark/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf"
-        - "./configs/spark/spark-env.sh:/opt/spark/conf/spark-env.sh"
+      - "./configs/spark/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf"
+      - "./configs/spark/spark-env.sh:/opt/spark/conf/spark-env.sh"
+      - "./configs/keytabs:/opt/keytabs"
+      - "./configs/krb/krb5.conf:/etc/krb5.conf"
     command: [ "spark-class", "org.apache.spark.deploy.master.Master" ]
     ports:
       - "8080:8080"
@@ -162,8 +176,10 @@ services:
     restart: always
     hostname: spark-worker
     volumes:
-        - "./configs/spark/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf"
-        - "./configs/spark/spark-env.sh:/opt/spark/conf/spark-env.sh"
+      - "./configs/spark/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf"
+      - "./configs/spark/spark-env.sh:/opt/spark/conf/spark-env.sh"
+      - "./configs/keytabs:/opt/keytabs"
+      - "./configs/krb/krb5.conf:/etc/krb5.conf"
     command: [ "spark-class", "org.apache.spark.deploy.worker.Worker" , "spark://spark-master:7077"]
     depends_on:
       - spark-master
@@ -182,22 +198,89 @@ services:
     restart: always
     command: [ "yarn", "historyserver" ]
     volumes:
+      - "./configs/krb/krb5.conf:/etc/krb5.conf"
       - hdfs_historyserver:/data/hdfs/
+      - "./configs/keytabs:/opt/keytabs"
     ports:
       - 8188:8188
     env_file:
       - ./hadoop.cfg
     environment:
       PATH: "/opt/spark/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/hadoop/bin"
-
     networks:
       hadoop:
+
+  openldap:
+    image: devsadds/openldap:1.5.0
+    restart: always
+    container_name: openldap
+    hostname: "omsk.linux2be.com"
+    volumes:
+      - "./configs/keytabs:/opt/keytabs"
+      - "openldap_ldap_data:/var/lib/ldap"
+      - "openldap_ldap_slap:/etc/ldap/slapd.d"
+      - "openldap_ldap_certs:/container/service/slapd/assets/certs"
+      - "./configs/openldap/schemas:/openldap/schemas"
+    environment:
+      LDAP_ORGANISATION: "Linux2be"
+      LDAP_DOMAIN: "omsk.linux2be.com"
+      LDAP_ADMIN_PASSWORD: "admin_password"
+      LDAP_READONLY_USER: "true"
+      LDAP_READONLY_USER_USERNAME: "readonlyuser"
+      LDAP_READONLY_USER_PASSWORD: "readonlypassword"
+      LDAP_BACKEND: "mdb"
+      KEEP_EXISTING_CONFIG: "true"
+      LDAP_REMOVE_CONFIG_AFTER_SETUP: "true"
+      LDAP_SSL_HELPER_PREFIX: "ldap"
+      LDAP_TLS: "false"
+      LDAP_TLS_ENFORCE: "false"
+      stdin_open: true
+      tty: true
+    networks:
+      hadoop:
+        aliases:
+          - omsk.linux2be.com
+
+  krb5:
+    image: krb5:1.0.0-ubuntu-r2
+    volumes:
+      - "./configs/krb/krb5.conf:/etc/krb5.conf"
+      - "./configs/krb/kdc.conf:/etc/kerberos/krb5kdc/kdc.conf"
+      - "./configs/krb/kadm5.acl:/etc/kerberos/krb5kdc/kadm5.acl"
+      - "./configs/keytabs:/opt/keytabs"
+      - "./logs/krb5:/var/log"
+      - "krb5kdc_database_1:/var/lib/krb5kdc"
+      - "./configs/krb/openldappassword.keyfile:/etc/krb5kdc/openldappassword.keyfile"
+    environment:
+      KERBEROS_REALM: "OMSK.LINUX2BE.COM"
+      LDAP_ADMIN_PASSWORD: "admin_password"
+      LDAP_SEARCH_BASE: "dc=omsk,dc=linux2be,dc=com"
+      KRB5_KDC_PROFILE: "/etc/kerberos/krb5kdc/kdc.conf"
+      KRB5_KDC_PASSWORD: "krb5"
+    domainname: omsk.linux2be.com
+    #command: ["krb5kdc", "-d", "/var/lib/krb5kdc/database", "-n" ]
+    entrypoint: tail -f /dev/null
+    restart: always
+    ports:
+      - "88:88"
+      - "749:749"
+    depends_on:
+      - openldap
+    networks:
+      hadoop:
+        aliases:
+          - kerberos.omsk.linux2be.com
+
 
 volumes:
   postgres-15-2-bitnami_data:
   hdfs_datanode:
   hdfs_historyserver:
   spark_staging:
+  openldap_ldap_data:
+  openldap_ldap_slap:
+  openldap_ldap_certs:
+  krb5kdc_database_1:
 
 networks:
   hadoop:

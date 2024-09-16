@@ -1,4 +1,6 @@
 all: hadoop_first_start hadoop_init
+prepre: create_dirs
+build_docker: build_ubuntu build_krb build_hadoop
 hadoop_first_start:
 	docker-compose up -d hive-metastore-postgresql; sleep 5; docker-compose up -d hive-metastore-init
 	docker-compose up -d
@@ -32,10 +34,27 @@ connect:
 testspark:
 	docker exec -it ubuntu-based-spark-master-1 bash -c "spark-submit --master yarn --deploy-mode cluster --class org.apache.spark.examples.SparkPi /opt/spark/examples/jars/spark-examples_2.12-3.5.2.jar"
 
-
-build:
-	cd docker/3.3.5-ubuntu/ && make all
+build_ubuntu:
+	cd docker/ubuntu-jammy/ && make all
 	cd ../..
+
+build_krb:
+	cd docker/krb5/ && make all
+	cd ../..
+
+
+build_hadoop:
+	cd docker/hadoop-3.3.5-ubuntu/ && make all
+	cd ../..
+
 
 clean:
 	docker-compose down -v
+
+clean_kerberos:
+	docker rm -f ubuntu-based-krb5-1
+	docker volume rm ubuntu-based_krb5kdc_database_1
+	docker-compose up -d krb5
+
+create_dirs:
+	mkdir -p logs/krb5 -m 777
