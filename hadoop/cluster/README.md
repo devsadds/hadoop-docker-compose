@@ -248,8 +248,10 @@ OEF
 
 ```sh
 # запрашиваем Kerberos-билет для сервисного аккаунта nm/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL, используя ключи из файла /opt/keytabs/sa0000mmprod-odin.keytab
-kinit -kt /opt/keytabs/sa0000mmprod.keytab sa0000mmprod@ORG.EXAMPLE.LOCAL
+kinit -kt /opt/keytabs/hive.keytab hive/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL
 klist
+
+
 
 # Подключаемся 
 /opt/hive/bin/beeline -u "jdbc:hive2://hive-server:10000/default;principal=hive/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
