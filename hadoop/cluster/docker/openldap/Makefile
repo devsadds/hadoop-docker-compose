@@ -1,4 +1,4 @@
-all: docker_info docker_build docker_tag docker_push 
+all: docker_info docker_build 
 build: docker_build
 
 DOCKER_ADDITIONAL_REGISTRY := $(DOCKER_CI_REGISTRY)
