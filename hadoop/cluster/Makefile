@@ -7,10 +7,10 @@ hadoop_first_start:
 	sleep 15;
 	
 testhive:
-	docker exec -it cluster-hive-server-1 bash -c "kinit -kt /opt/keytabs/hive.keytab hive/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL;klist; /opt/hive/bin/beeline -u 'jdbc:hive2://hive-server:10000/default;principal=hive/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL' -f /tmp/test/script.sql"
+	docker exec -it cluster-hive-server-1 bash -c "kinit -kt /opt/keytabs/nn.keytab nn/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL;klist; /opt/hive/bin/beeline -u 'jdbc:hive2://hive-server:10000/default;principal=hive/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL' -f /tmp/test/script.sql"
 
 connect:
-	docker exec -it cluster-hive-server-1 bash -c "kinit -kt /opt/keytabs/hive.keytab hive/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL;klist; /opt/hive/bin/beeline -u 'jdbc:hive2://hive-server:10000/default;principal=hive/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL'"
+	docker exec -it cluster-hive-server-1 bash -c "kinit -kt /opt/keytabs/nn.keytab nn/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL;klist; /opt/hive/bin/beeline -u 'jdbc:hive2://hive-server:10000/default;principal=nn/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL'"
 testspark:
 	docker exec -it cluster-spark-master-1 bash -c "spark-submit --master yarn --deploy-mode cluster --class org.apache.spark.examples.SparkPi /opt/spark/examples/jars/spark-examples_2.12-3.5.2.jar"
 
