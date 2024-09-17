@@ -76,7 +76,7 @@ services:
       hadoop:
 
   hive-metastore-postgresql:
-    image: postgresql:15.4.0.c
+    image: ${POSTGRES_BASE_IMAGE:-registry.gitlab.com/devops-f/devops/postgresql:15.4.0.c}
     restart: no
     volumes:
       - "./configs/postgres:/opt/bitnami/postgresql/conf/conf.d"
