@@ -15,7 +15,8 @@ services:
       - "./configs/krb/krb5.conf:/etc/krb5.conf"
     env_file:
       - ./hive.cfg
-    command: ["hive", "--service", "hiveserver2"]
+    #command: ["sleep", "infinity"]
+    command: ["hive", "--service", "hiveserver2", "--hiveconf", "hive.root.logger=DEBUG,console" ]
     #entrypoint: tail -f /dev/null
     environment:
       PATH: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/hadoop/bin:/opt/hive/bin:/opt/spark/bin'
