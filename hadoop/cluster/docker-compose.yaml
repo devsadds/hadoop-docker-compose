@@ -169,6 +169,7 @@ services:
     volumes:
       - "./configs/spark/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf"
       - "./configs/spark/spark-env.sh:/opt/spark/conf/spark-env.sh"
+      - "./configs/spark/log4j.properties:/opt/spark/conf/log4j.properties"
       - "keytabs:/opt/keytabs"
       - "./configs/krb/krb5.conf:/etc/krb5.conf"
     command: [ "spark-class", "org.apache.spark.deploy.master.Master" ]
@@ -190,6 +191,7 @@ services:
     volumes:
       - "./configs/spark/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf"
       - "./configs/spark/spark-env.sh:/opt/spark/conf/spark-env.sh"
+      - "./configs/spark/log4j.properties:/opt/spark/conf/log4j.properties"
       - "keytabs:/opt/keytabs"
       - "./configs/krb/krb5.conf:/etc/krb5.conf"
     command: [ "spark-class", "org.apache.spark.deploy.worker.Worker" , "spark://spark-master:7077"]

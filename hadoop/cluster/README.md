@@ -151,7 +151,7 @@ kadmin.local -q "addprinc -randkey hdfs@ORG.EXAMPLE.LOCAL"
 После создания принципалов, создайте keytab-файлы для каждого из них:
 ```sh
 cd /opt/keytabs
-kadmin.local -q "ktadd -k hdfs.keytab hive/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
+kadmin.local -q "ktadd -k hdfs.keytab hdfs/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
 kadmin.local -q "ktadd -k hive.keytab hive/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
 kadmin.local -q "ktadd -k nn.keytab nn/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
 kadmin.local -q "ktadd -k dn.keytab dn/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
@@ -162,7 +162,6 @@ kadmin.local -q "ktadd -k timeline.keytab timeline/odin-ha.org.example.local@ORG
 kadmin.local -q "ktadd -k hh.keytab hh/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
 kadmin.local -q "ktadd -k sa0000mmprod.keytab sa0000mmprod@ORG.EXAMPLE.LOCAL"
 kadmin.local -q "ktadd -k sa0000mmprod-odin.keytab sa0000mmprod/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
-kadmin.local -q "ktadd -k hdfs.keytab hdfs@ORG.EXAMPLE.LOCAL"
 
 ```
 При создании увидим подобные сообщения
@@ -303,7 +302,8 @@ docker-compose up datanode -d
 Создадим директорий в hdfs
 
 ```sh
-docker exec -it cluster-namenode-1 bash -c "kinit -kt /opt/keytabs/nn.keytab nn/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL;hdfs dfs -mkdir -p /user/hive/warehouse /tmp/hive /user/hadoop/.sparkStaging;"
+docker exec -it cluster-namenode-1 bash -c "kinit -kt /opt/keytabs/hdfs.keytab hdfs/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL;hdfs dfs -mkdir -p /user/hive/warehouse /tmp/hive /user/hadoop/.sparkStaging /spark-jars /spark-logs"
+docker exec -it cluster-namenode-1 bash -c "kinit -kt /opt/keytabs/hdfs.keytab hdfs/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL;hdfs dfs -put /opt/spark/jars/* /spark-jars"
 ```
 
 Запустим остатки
