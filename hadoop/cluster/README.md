@@ -129,6 +129,7 @@ docker-compose up -d krb5
 
 
 ```sh
+kadmin.local -q "addprinc -randkey hdfs/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
 kadmin.local -q "addprinc -randkey hive/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
 kadmin.local -q "addprinc -randkey nn/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
 kadmin.local -q "addprinc -randkey dn/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
@@ -150,6 +151,7 @@ kadmin.local -q "addprinc -randkey hdfs@ORG.EXAMPLE.LOCAL"
 После создания принципалов, создайте keytab-файлы для каждого из них:
 ```sh
 cd /opt/keytabs
+kadmin.local -q "ktadd -k hdfs.keytab hive/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
 kadmin.local -q "ktadd -k hive.keytab hive/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
 kadmin.local -q "ktadd -k nn.keytab nn/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
 kadmin.local -q "ktadd -k dn.keytab dn/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
