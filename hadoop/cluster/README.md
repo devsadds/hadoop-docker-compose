@@ -1,6 +1,6 @@
 # Full stack
 
-## Prepare
+## 1. Prepare
 
 ```
 make build_docker
@@ -9,7 +9,7 @@ docker-compose up -d phpldapadmin
 ```
 
 
-## Ldap config
+## 2. Ldap config
 
 Создаем нужные схемы
 
@@ -65,3 +65,93 @@ admin_password
 ```
 
 
+
+## 3. Kerberos config
+
+
+
+Запускаем контейнер с  переменной  `CONTAINER_DEBUG_ON: "true"`
+
+```sh
+export CONTAINER_DEBUG_ON="true"
+docker-compose up -d krb5
+```
+
+Проверка соединения с ldap server из контейнера krb5
+
+```sh
+docker exec -ti cluster-krb5-1 bash
+```
+
+```sh
+ldapsearch -x -H ldap://openldap:389 -D "cn=admin,dc=org,dc=example,dc=local" -w admin_password
+ldapsearch -x -H ldap://openldap:389 -b "dc=org,dc=example,dc=local" "(cn=krbContainer)"
+```
+
+нужно инициализировать базу данных Kerberos с помощью kdb5_ldap_util
+
+```sh
+cd /var/lib/krb5kdc
+kdb5_ldap_util -D cn=admin,dc=org,dc=example,dc=local create -subtrees dc=org,dc=example,dc=local -r ORG.EXAMPLE.LOCAL -s
+```
+
+Потом - тут вводим пароль как в ldap
+
+```sh
+kdb5_ldap_util stashsrvpw -f /var/lib/krb5kdc/openldappassword.keyfile cn=admin,dc=org,dc=example,dc=local
+#или
+#kdb5_ldap_util -D "cn=admin,dc=org,dc=example,dc=local" stashsrvpw -f /etc/krb5kdc/openldappassword.keyfile cn=admin,dc=org,dc=example,dc=local
+exit
+```
+
+Перезапускаем контейнер без  переменной `CONTAINER_DEBUG_ON: "true"`
+
+```sh
+export CONTAINER_DEBUG_ON="false"
+docker-compose up -d krb5
+```
+
+
+
+## Пользователи
+
+
+```sh
+kadmin.local -q "addprinc -randkey hive/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
+kadmin.local -q "addprinc -randkey nn/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
+kadmin.local -q "addprinc -randkey dn/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
+kadmin.local -q "addprinc -randkey rm/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
+kadmin.local -q "addprinc -randkey nm/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
+kadmin.local -q "addprinc -randkey mapred/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
+kadmin.local -q "addprinc -randkey sa0000mmprod@ORG.EXAMPLE.LOCAL"
+kadmin.local -q "addprinc -randkey sa0000mmprod/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
+```
+
+
+## Keytabs
+
+После создания принципалов, создайте keytab-файлы для каждого из них:
+```sh
+cd /opt/keytabs
+kadmin.local -q "ktadd -k hive.keytab hive/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
+kadmin.local -q "ktadd -k nn.keytab nn/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
+kadmin.local -q "ktadd -k dn.keytab dn/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
+kadmin.local -q "ktadd -k rm.keytab rm/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
+kadmin.local -q "ktadd -k nm.keytab nm/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
+kadmin.local -q "ktadd -k mapred.keytab mapred/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
+kadmin.local -q "ktadd -k sa0000mmprod.keytab sa0000mmprod@ORG.EXAMPLE.LOCAL"
+kadmin.local -q "ktadd -k sa0000mmprod-odin.keytab sa0000mmprod/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
+```
+
+## Проверка аутентификации 
+
+```sh
+docker exec -ti cluster-krb-client-1 bash
+```
+
+```sh
+kinit -kt /opt/keytabs/rm.keytab rm/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL
+klist
+```
+
+## 4. Hadoop and hive
