@@ -209,7 +209,7 @@ services:
     command: [ "yarn", "timelineserver" ]
     ports:
       - 8188:8188
-    entrypoint: tail -f /dev/null
+    #entrypoint: tail -f /dev/null
     volumes:
       - "./configs/krb/krb5.conf:/etc/krb5.conf"
       - hdfs_timelineserver:/data/hdfs/
