@@ -1,0 +1,7 @@
+version: '3.4'
+services:
+  hadoop:
+    image: hadoop:3.3.5-ubuntu-r1
+    build:
+      context: build/hadoop/.
+      network: host
