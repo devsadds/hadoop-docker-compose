@@ -172,7 +172,6 @@ services:
       - "keytabs:/opt/keytabs"
       - "./configs/krb/krb5.conf:/etc/krb5.conf"
     command: [ "spark-class", "org.apache.spark.deploy.master.Master" ]
-
     env_file:
       - ./hadoop.cfg
     environment:
@@ -193,7 +192,7 @@ services:
       - "./configs/spark/log4j.properties:/opt/spark/conf/log4j.properties"
       - "keytabs:/opt/keytabs"
       - "./configs/krb/krb5.conf:/etc/krb5.conf"
-    command: [ "spark-class", "org.apache.spark.deploy.worker.Worker" , "spark://spark-master:7077"]
+    command: [ "spark-class", "org.apache.spark.deploy.worker.Worker" , "spark://spark-master:7077" ]
     env_file:
       - ./hadoop.cfg
     environment:
