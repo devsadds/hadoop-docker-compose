@@ -43,9 +43,6 @@ OEF
 
 ldapadd -x -D cn=admin,dc=org,dc=example,dc=local  -w ${LDAP_ADMIN_PASSWORD} -f /tmp/2.ldif
 
-
-
-
 cat <<'OEF'> /tmp/3.ldif
 dn: cn=ORG.EXAMPLE.LOCAL,cn=krbContainer,dc=org,dc=example,dc=local
 objectClass: top
@@ -55,9 +52,24 @@ OEF
 #ldapadd -x -D cn=admin,dc=org,dc=example,dc=local  -w admin_password -f /tmp/3.ldif
 
 ```
+Теперь надо решить проблему с index `mdb_equality_candidates: (krbPrincipalName) not indexed`
 
 
-UI login ldapadmin
+```sh
+cat <<'OEF'> /tmp/9.1-kerberos.indexes.ldif
+dn: olcDatabase={1}mdb,cn=config
+changetype: modify
+add: olcDbIndex
+olcDbIndex: krbPrincipalName eq
+-
+add: olcDbIndex
+olcDbIndex: ou eq
+OEF
+ldapadd -QY EXTERNAL -H ldapi:///  -D cn=admin,dc=org,dc=example,dc=local -w ${LDAP_ADMIN_PASSWORD} -f /tmp/9.1-kerberos.indexes.ldif
+```
+
+UI login ldapadmin perms
+
 
 ```yaml
 cn=admin,dc=org,dc=example,dc=local
@@ -156,5 +168,19 @@ klist
 
 ## 4. Hadoop and hive
 
-
+```sh
 docker-compose up -d hive-metastore
+docker-compose up -d hive-server
+```
+
+одключение к hive
+
+```sh
+docker exec -ti cluster-krb-client-1 bash
+```
+
+```sh
+kinit -kt /opt/keytabs/nm.keytab nm/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL
+klist
+/opt/hive/bin/beeline -u "jdbc:hive2://hive-server:10000/default;principal=hive/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
+```

@@ -13,7 +13,7 @@ docker exec -ti -u 0 ubuntu-based-hive-server-1 bash -c "chown -R hadoop:hadoop 
 ```sh
 kinit -kt /opt/keytabs/nm.keytab nm/odin-ha.omsk.linux2be.com@OMSK.LINUX2BE.COM
 klist
-
+beeline -u "jdbc:hive2://hive-server:10000/default;principal=hive/odin-ha.omsk.linux2be.com@OMSK.LINUX2BE.COM"
 ```
 
 
