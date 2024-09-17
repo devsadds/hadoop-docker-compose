@@ -1,31 +1,35 @@
 # Kerberos
 
-##  Проверка соединения с ldap server
+
+## Первый звпуск контейнера 
+
+Запускаем контейнер с  переменной `CONTAINER_DEBUG_ON: "true"`
+
+Проверка соединения с ldap server из контейнера krb5
 
 ```sh
 ldapsearch -x -H ldap://openldap:389 -D "cn=admin,dc=org,dc=example,dc=local" -w admin_password
-ldapsearch -x -H ldap://openldap:389 -b "dc=org,dc=example,dc=local" "(cn=krbContainer)" -w admin_password
+ldapsearch -x -H ldap://openldap:389 -b "dc=org,dc=example,dc=local" "(cn=krbContainer)"
 ```
 
 нужно инициализировать базу данных Kerberos с помощью kdb5_ldap_util
 
 ```sh
 cd /var/lib/krb5kdc
-kdb5_ldap_util -D cn=admin,dc=org,dc=example,dc=local destroy -r ORG.EXAMPLE.LOCAL
 kdb5_ldap_util -D cn=admin,dc=org,dc=example,dc=local create -subtrees dc=org,dc=example,dc=local -r ORG.EXAMPLE.LOCAL -s
 ```
-
 
 Потом
 
 ```sh
-rm /etc/krb5kdc/openldappassword.keyfile
-#или
-kdb5_ldap_util stashsrvpw -f /etc/krb5kdc/openldappassword.keyfile cn=admin,dc=org,dc=example,dc=local
+kdb5_ldap_util stashsrvpw -f /var/lib/openldappassword.keyfile cn=admin,dc=org,dc=example,dc=local
 #или
 #kdb5_ldap_util -D "cn=admin,dc=org,dc=example,dc=local" stashsrvpw -f /etc/krb5kdc/openldappassword.keyfile cn=admin,dc=org,dc=example,dc=local
-
 ```
+
+Перезапускаем контейнер без  переменной `CONTAINER_DEBUG_ON: "true"`
+
+
 ## Пользователи
 
 
