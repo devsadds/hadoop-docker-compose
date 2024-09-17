@@ -137,6 +137,9 @@ kadmin.local -q "addprinc -randkey nm/odin-ha.org.example.local@ORG.EXAMPLE.LOCA
 kadmin.local -q "addprinc -randkey mapred/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
 kadmin.local -q "addprinc -randkey sa0000mmprod@ORG.EXAMPLE.LOCAL"
 kadmin.local -q "addprinc -randkey sa0000mmprod/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
+
+kadmin.local -q "addprinc -randkey hdfs@ORG.EXAMPLE.LOCAL"
+
 ```
 
 
@@ -153,7 +156,16 @@ kadmin.local -q "ktadd -k nm.keytab nm/odin-ha.org.example.local@ORG.EXAMPLE.LOC
 kadmin.local -q "ktadd -k mapred.keytab mapred/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
 kadmin.local -q "ktadd -k sa0000mmprod.keytab sa0000mmprod@ORG.EXAMPLE.LOCAL"
 kadmin.local -q "ktadd -k sa0000mmprod-odin.keytab sa0000mmprod/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
+kadmin.local -q "ktadd -k hdfs.keytab hdfs@ORG.EXAMPLE.LOCAL"
+
 ```
+При создании увидим подобные сообщения
+
+```sh
+Entry for principal hdfs@ORG.EXAMPLE.LOCAL with kvno 2, encryption type aes256-cts-hmac-sha1-96 added to keytab WRFILE:hdfs.keytab.
+Entry for principal hdfs@ORG.EXAMPLE.LOCAL with kvno 2, encryption type aes128-cts-hmac-sha1-96 added to keytab WRFILE:hdfs.keytab.
+```
+
 Создадим hadoop.http.authentication.signature.secret.file
 ```sh
 head -c 32 /dev/urandom | base64 > /opt/keytabs/hadoop-http-auth-signature-secret
@@ -277,4 +289,26 @@ keytool -export -alias org.example.local -keystore keystore.jks -file org.exampl
 # Создайте truststore и импортируйте ранее экспортированный сертификат:
 keytool -import -alias org.example.local -file org.example.local.crt -keystore truststore.jks -noprompt
 chown -R 2002 /opt/keytabs
+exit
 ```
+
+Теперь запускаем datanode
+
+```sh
+docker-compose up datanode -d
+```
+
+
+Создаybt директорий в hdfs
+
+```sh
+docker exec -it cluster-namenode-1 bash -c "kinit -kt /opt/keytabs/nn.keytab nn/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL;hdfs dfs -mkdir -p /user/hive/warehouse /tmp/hive /user/hadoop/.sparkStaging;"
+```
+
+spark-worker
+spark-master
+
+
+## Mans
+
+HADOOP_SECURE - https://hadoop.apache.org/docs/stable/hadoop-mapreduce-client/hadoop-mapreduce-client-core/EncryptedShuffle.html
