@@ -252,11 +252,10 @@ services:
     networks:
       hadoop:
         aliases:
-          - openldap
           - org.example.local
 
   phpldapadmin:
-    image: osixia/phpldapadmin:latest
+    image: ${PHPLDAPADMIN_BASE_IMAGE:-osixia/phpldapadmin:latest}
     restart: no
     environment:
       PHPLDAPADMIN_LDAP_HOSTS: "openldap"
