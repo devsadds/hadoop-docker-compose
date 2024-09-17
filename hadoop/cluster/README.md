@@ -183,14 +183,65 @@ docker-compose up -d hive-metastore
 docker-compose up -d hive-server
 ```
 
-одключение к hive
+Чтобы подключиться k hive server нужно пробросить туда определенные конфиги. Возьмем их из запущенного сервера hive
+
+```sh
+mkdir -p  /root/hive/conf
+docker cp cluster-hive-server-1:/opt/hive/conf/hive-site.xml /root/hive/conf/
+docker cp cluster-hive-server-1:/opt/hive/conf/hdfs-site.xml /root/hive/conf/
+docker cp cluster-hive-server-1:/opt/hive/conf/core-site.xml /root/hive/conf/
+docker cp cluster-hive-server-1:/opt/hive/conf/log4j.properties /root/hive/conf/log4j.properties
+```
+
+Теперь положим в нашего клиента
+
+```sh
+docker cp /root/hive/conf/hive-site.xml cluster-krb-client-1:/opt/hive/conf/
+docker cp /root/hive/conf/hdfs-site.xml cluster-krb-client-1:/opt/hive/conf/
+docker cp /root/hive/conf/core-site.xml cluster-krb-client-1:/opt/hive/conf/
+docker cp /root/hive/conf/log4j.properties cluster-krb-client-1:/opt/hive/conf/
+```
+
+Зайдем в нашего клиента
 
 ```sh
 docker exec -ti cluster-krb-client-1 bash
 ```
 
 ```sh
-kinit -kt /opt/keytabs/nm.keytab nm/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL
+export HADOOP_CONF_DIR=/opt/hive/conf/
+# запрашиваем Kerberos-билет для сервисного аккаунта nm/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL, используя ключи из файла /opt/keytabs/sa0000mmprod-odin.keytab
+kinit -kt /opt/keytabs/sa0000mmprod-odin.keytab nm/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL
 klist
+# Подключаемся 
 /opt/hive/bin/beeline -u "jdbc:hive2://hive-server:10000/default;principal=hive/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
 ```
+
+Выполним скрипт 
+
+```sql
+DROP TABLE IF EXISTS my_test_table_3;
+CREATE TABLE IF  not EXISTS  my_test_table_3 (
+  id INT,
+  name STRING,
+  created_at TIMESTAMP
+);
+SHOW TABLES;
+INSERT INTO my_test_table_3 (id, name, created_at) VALUES (3, 'Alice', CURRENT_TIMESTAMP),(4, 'Bob', CURRENT_TIMESTAMP);
+SELECT * FROM my_test_table_3;
+DESCRIBE my_test_table_3;
+```
+
+## Проблемы
+
+1. AuthenticationFilter:240 - Unable to initialize FileSignerSecretProvider, falling back to use random secrets. Reason: Could not read signature secret file: /opt/app-user/hadoop-http-auth-signature-secret
+
+Решение 
+
+```sh
+head -c 32 /dev/urandom | base64 > /opt/keytabs/hadoop-http-auth-signature-secret
+```
+
+hadoop.http.authentication.signature.secret.file=/opt/keytabs/hadoop-http-auth-signature-secret
+
+docker-compose restart resourcemanager nodemanager
