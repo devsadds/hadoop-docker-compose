@@ -135,6 +135,7 @@ kadmin.local -q "addprinc -randkey dn/odin-ha.org.example.local@ORG.EXAMPLE.LOCA
 kadmin.local -q "addprinc -randkey rm/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
 kadmin.local -q "addprinc -randkey nm/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
 kadmin.local -q "addprinc -randkey mapred/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
+kadmin.local -q "addprinc -randkey timeline/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
 kadmin.local -q "addprinc -randkey sa0000mmprod@ORG.EXAMPLE.LOCAL"
 kadmin.local -q "addprinc -randkey sa0000mmprod/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
 
@@ -154,6 +155,7 @@ kadmin.local -q "ktadd -k dn.keytab dn/odin-ha.org.example.local@ORG.EXAMPLE.LOC
 kadmin.local -q "ktadd -k rm.keytab rm/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
 kadmin.local -q "ktadd -k nm.keytab nm/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
 kadmin.local -q "ktadd -k mapred.keytab mapred/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
+kadmin.local -q "ktadd -k timeline.keytab timeline/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
 kadmin.local -q "ktadd -k sa0000mmprod.keytab sa0000mmprod@ORG.EXAMPLE.LOCAL"
 kadmin.local -q "ktadd -k sa0000mmprod-odin.keytab sa0000mmprod/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
 kadmin.local -q "ktadd -k hdfs.keytab hdfs@ORG.EXAMPLE.LOCAL"
@@ -221,7 +223,6 @@ docker exec -ti -u 0 cluster-krb-client-1 sh -c 'chown -R 2002 /opt/hive/conf'
 Зайдем в нашего клиента
 
 ```sh
-docker exec -ti -u 0 cluster-krb-client-1 sh -c 'chown -R 2002 /opt/hive/conf'
 docker exec -ti cluster-krb-client-1 bash
 ```
 ```sh
@@ -243,7 +244,6 @@ OEF
 
 
 ```sh
-
 # запрашиваем Kerberos-билет для сервисного аккаунта nm/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL, используя ключи из файла /opt/keytabs/sa0000mmprod-odin.keytab
 kinit -kt /opt/keytabs/sa0000mmprod.keytab sa0000mmprod@ORG.EXAMPLE.LOCAL
 klist
@@ -274,9 +274,7 @@ DESCRIBE my_test_table_3;
 docker exec -ti cluster-krb-client-1 bash
 ```
 
-keytool -genkeypair -alias org.example.local -keyalg RSA -keysize 2048 -keystore keystore.jks -validity 1365
-
-
+Сгенирим нужные сертификаты - без них датанода не работает в  kerberos режиме
 
 ```sh
 # Создать keystore 
@@ -298,16 +296,17 @@ exit
 docker-compose up datanode -d
 ```
 
-
-Создаybt директорий в hdfs
+Создадим директорий в hdfs
 
 ```sh
 docker exec -it cluster-namenode-1 bash -c "kinit -kt /opt/keytabs/nn.keytab nn/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL;hdfs dfs -mkdir -p /user/hive/warehouse /tmp/hive /user/hadoop/.sparkStaging;"
 ```
 
-spark-worker
-spark-master
+Запустим остатки
 
+```sh
+docker-compose up -d
+```
 
 ## Mans
 
