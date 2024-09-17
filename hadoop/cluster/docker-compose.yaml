@@ -222,7 +222,7 @@ services:
       hadoop:
 
   openldap:
-    image: openldap:1.5.0
+    image: ${OPENLDAP_BASE_IMAGE:-openldap:1.5.0}
     restart: no
     hostname: "openldap"
     domainname: "example.local"
