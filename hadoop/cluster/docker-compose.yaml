@@ -2,15 +2,15 @@ version: "2"
 services:
 
   hive-server:
-    image: hadoop:3.3.5-ubuntu-r1
-    restart: always
+    image: ${HADOOP_BASE_IMAGE:-hadoop:3.3.5-ubuntu-r1}
+    restart: no
     volumes:
       - "./configs/hive/log4j.properties:/opt/hive/conf/log4j.properties"
       - "./configs/hive/hive-env.sh:/opt/hive/conf/hive-env.sh"
-      - "./test:/tmp/test"
       - "./configs/spark/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf"
       - "./configs/spark/spark-env.sh:/opt/spark/conf/spark-env.sh"
       - spark_staging:/opt/hadoop/.sparkStaging
+      - "./test:/tmp/test"
       - "./configs/keytabs:/opt/keytabs"
       - "./configs/krb/krb5.conf:/etc/krb5.conf"
     env_file:
@@ -29,10 +29,9 @@ services:
       - hive-metastore
 
 
-
   hive-metastore:
-    image: hadoop:3.3.5-ubuntu-r1
-    restart: always
+    image: ${HADOOP_BASE_IMAGE:-hadoop:3.3.5-ubuntu-r1}
+    restart: no
     env_file:
       - ./hive.cfg
     volumes:
@@ -52,14 +51,13 @@ services:
       - "9083:9083"
     depends_on:
       - hive-metastore-postgresql
-    
     networks:
       hadoop:
         aliases:
           - odin-ha.omsk.example.com
 
   hive-metastore-init:
-    image: hadoop:3.3.5-ubuntu-r1
+    image: ${HADOOP_BASE_IMAGE:-hadoop:3.3.5-ubuntu-r1}
     restart: no
     volumes:
       - "./configs/hive/log4j.properties:/opt/hive/conf/log4j.properties"
@@ -78,8 +76,8 @@ services:
       hadoop:
 
   hive-metastore-postgresql:
-    image: docker-registry.services.example.com:443/devops-f/devops/postgresql:15.4.0.c
-    restart: always
+    image: postgresql:15.4.0.c
+    restart: no
     volumes:
       - "./configs/postgres:/opt/bitnami/postgresql/conf/conf.d"
       - "postgres-15-2-bitnami_data:/bitnami/postgresql"
@@ -96,8 +94,8 @@ services:
           - postgres
 
   namenode:
-    image: hadoop:3.3.5-ubuntu-r1
-    restart: always
+    image: ${HADOOP_BASE_IMAGE:-hadoop:3.3.5-ubuntu-r1}
+    restart: no
     hostname: namenode
     volumes:
       - ./Makefile:/opt/hadoop/Makefile
@@ -105,7 +103,7 @@ services:
       - "./configs/keytabs:/opt/keytabs"
       - "./configs/krb/krb5.conf:/etc/krb5.conf"
     ports:
-      - 9870:9870
+      - 29870:9870
     env_file:
       - ./hadoop.cfg
     environment:
@@ -117,7 +115,7 @@ services:
       hadoop:
 
   datanode:
-    image: hadoop:3.3.5-ubuntu-r1
+    image: ${HADOOP_BASE_IMAGE:-hadoop:3.3.5-ubuntu-r1}
     restart: no
     hostname: datanode
     volumes:
@@ -132,7 +130,9 @@ services:
       hadoop:
 
   resourcemanager:
-    image: hadoop:3.3.5-ubuntu-r1
+    image: ${HADOOP_BASE_IMAGE:-hadoop:3.3.5-ubuntu-r1}
+    ports:
+      - 28088:8088
     restart: no
     hostname: resourcemanager
     volumes:
@@ -140,15 +140,14 @@ services:
       - "./configs/keytabs:/opt/keytabs"
       - "./configs/krb/krb5.conf:/etc/krb5.conf"
     command: [ "yarn", "resourcemanager" ]
-    ports:
-      - 8088:8088
+
     env_file:
       - ./hadoop.cfg
     networks:
       hadoop:
 
   nodemanager:
-    image: hadoop:3.3.5-ubuntu-r1
+    image: ${HADOOP_BASE_IMAGE:-hadoop:3.3.5-ubuntu-r1}
     restart: no
     hostname: nodemanager
     volumes:
@@ -161,18 +160,19 @@ services:
       hadoop:
 
   spark-master:
-    image: hadoop:3.3.5-ubuntu-r1
-    restart: always
+    image: ${HADOOP_BASE_IMAGE:-hadoop:3.3.5-ubuntu-r1}
+    restart: no
     hostname: spark-master
+    ports:
+      - "28080:8080"
+      - "27077:7077"
     volumes:
       - "./configs/spark/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf"
       - "./configs/spark/spark-env.sh:/opt/spark/conf/spark-env.sh"
       - "./configs/keytabs:/opt/keytabs"
       - "./configs/krb/krb5.conf:/etc/krb5.conf"
     command: [ "spark-class", "org.apache.spark.deploy.master.Master" ]
-    ports:
-      - "8080:8080"
-      - "7077:7077"
+
     env_file:
       - ./hadoop.cfg
     environment:
@@ -182,38 +182,38 @@ services:
       hadoop:
 
   spark-worker:
-    image: hadoop:3.3.5-ubuntu-r1
-    restart: always
+    image: ${HADOOP_BASE_IMAGE:-hadoop:3.3.5-ubuntu-r1}
+    restart: no
     hostname: spark-worker
+    ports:
+      - "18081:8081"
     volumes:
       - "./configs/spark/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf"
       - "./configs/spark/spark-env.sh:/opt/spark/conf/spark-env.sh"
       - "./configs/keytabs:/opt/keytabs"
       - "./configs/krb/krb5.conf:/etc/krb5.conf"
     command: [ "spark-class", "org.apache.spark.deploy.worker.Worker" , "spark://spark-master:7077"]
-    depends_on:
-      - spark-master
-    ports:
-      - "8081:8081"
     env_file:
       - ./hadoop.cfg
     environment:
       PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/hadoop/bin:/opt/spark/bin"
       HADOOP_HOME: "/opt/hadoop"
+    depends_on:
+      - spark-master
     networks:
       hadoop:
 
   historyserver:
-    image: hadoop:3.3.5-ubuntu-r1
-    restart: always
+    image: ${HADOOP_BASE_IMAGE:-hadoop:3.3.5-ubuntu-r1}
+    restart: no
     command: [ "yarn", "historyserver" ]
+    ports:
+      - 8188:8188
     entrypoint: tail -f /dev/null
     volumes:
       - "./configs/krb/krb5.conf:/etc/krb5.conf"
       - hdfs_historyserver:/data/hdfs/
       - "./configs/keytabs:/opt/keytabs"
-    ports:
-      - 8188:8188
     env_file:
       - ./hadoop.cfg
     environment:
@@ -223,7 +223,7 @@ services:
 
   openldap:
     image: openldap:1.5.0
-    restart: always
+    restart: no
     hostname: "openldap"
     domainname: "example.local"
     ports:
@@ -257,6 +257,7 @@ services:
 
   phpldapadmin:
     image: osixia/phpldapadmin:latest
+    restart: no
     environment:
       PHPLDAPADMIN_LDAP_HOSTS: "openldap"
       PHPLDAPADMIN_HTTPS: "false"
@@ -264,11 +265,10 @@ services:
       - "182:80"
     networks:
       hadoop:
-    restart: always
 
   krb5:
     image: krb5:1.0.0-ubuntu-r2
-    restart: always
+    restart: no
     ports:
       - "88:88"
       - "749:749"
@@ -294,8 +294,6 @@ services:
       hadoop:
         aliases:
           - kerberos.org.example.local
-
-
 
 volumes:
   postgres-15-2-bitnami_data:

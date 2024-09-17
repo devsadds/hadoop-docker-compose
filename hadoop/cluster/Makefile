@@ -1,6 +1,6 @@
 all: hadoop_first_start hadoop_init
 prepre: create_dirs
-build_docker: build_ubuntu build_openldap build_krb build_hadoop
+build_docker: build_ubuntu build_openldap build_krb build_postgresql build_hadoop
 hadoop_first_start:
 	docker-compose up -d hive-metastore-postgresql; sleep 5; docker-compose up -d hive-metastore-init
 	docker-compose up -d
@@ -49,6 +49,11 @@ build_hadoop:
 build_openldap:
 	cd docker/openldap/ && make all
 	cd ../..
+
+build_postgresql:
+	cd docker/postgresql/ && make all
+	cd ../..
+
 
 clean:
 	docker-compose down -v

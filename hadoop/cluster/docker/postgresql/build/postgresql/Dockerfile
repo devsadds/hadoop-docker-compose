@@ -1,0 +1,1 @@
+FROM registry.gitlab.com/devops-f/devops/postgresql:15.4.0.c
