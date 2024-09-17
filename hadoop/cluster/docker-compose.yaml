@@ -140,7 +140,6 @@ services:
       - "keytabs:/opt/keytabs"
       - "./configs/krb/krb5.conf:/etc/krb5.conf"
     command: [ "yarn", "resourcemanager" ]
-
     env_file:
       - ./hadoop.cfg
     networks:

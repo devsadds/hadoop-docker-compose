@@ -154,7 +154,10 @@ kadmin.local -q "ktadd -k mapred.keytab mapred/odin-ha.org.example.local@ORG.EXA
 kadmin.local -q "ktadd -k sa0000mmprod.keytab sa0000mmprod@ORG.EXAMPLE.LOCAL"
 kadmin.local -q "ktadd -k sa0000mmprod-odin.keytab sa0000mmprod/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
 ```
-
+Создадим hadoop.http.authentication.signature.secret.file
+```sh
+head -c 32 /dev/urandom | base64 > /opt/keytabs/hadoop-http-auth-signature-secret
+```
 ```sh
 chown -R 2002 /opt/keytabs
 ```
@@ -200,19 +203,39 @@ docker cp /root/hive/conf/hive-site.xml cluster-krb-client-1:/opt/hive/conf/
 docker cp /root/hive/conf/hdfs-site.xml cluster-krb-client-1:/opt/hive/conf/
 docker cp /root/hive/conf/core-site.xml cluster-krb-client-1:/opt/hive/conf/
 docker cp /root/hive/conf/log4j.properties cluster-krb-client-1:/opt/hive/conf/
+docker exec -ti -u 0 cluster-krb-client-1 sh -c 'chown -R 2002 /opt/hive/conf'
 ```
 
 Зайдем в нашего клиента
 
 ```sh
+docker exec -ti -u 0 cluster-krb-client-1 sh -c 'chown -R 2002 /opt/hive/conf'
 docker exec -ti cluster-krb-client-1 bash
 ```
+```sh
+cat<<'OEF'> /opt/hive/conf/log4j.properties
+# Set the default logging level for all loggers to INFO
+log4j.rootLogger=INFO, A1
+
+# Define the console appender
+log4j.appender.A1=org.apache.log4j.ConsoleAppender
+log4j.appender.A1.target=System.err
+log4j.appender.A1.layout=org.apache.log4j.PatternLayout
+log4j.appender.A1.layout.ConversionPattern=%d{ISO8601} %p %c: %m%n
+
+# Set the logging level for specific packages
+log4j.logger.org.apache.hadoop=INFO
+log4j.logger.org.apache.hive=INFO
+OEF
+```
+
 
 ```sh
-export HADOOP_CONF_DIR=/opt/hive/conf/
+
 # запрашиваем Kerberos-билет для сервисного аккаунта nm/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL, используя ключи из файла /opt/keytabs/sa0000mmprod-odin.keytab
-kinit -kt /opt/keytabs/sa0000mmprod-odin.keytab nm/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL
+kinit -kt /opt/keytabs/sa0000mmprod.keytab sa0000mmprod@ORG.EXAMPLE.LOCAL
 klist
+
 # Подключаемся 
 /opt/hive/bin/beeline -u "jdbc:hive2://hive-server:10000/default;principal=hive/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
 ```
@@ -227,21 +250,10 @@ CREATE TABLE IF  not EXISTS  my_test_table_3 (
   created_at TIMESTAMP
 );
 SHOW TABLES;
+INSERT INTO my_test_table_3 (id, name, created_at) VALUES (1, 'vasya', CURRENT_TIMESTAMP),(2, 'borya', CURRENT_TIMESTAMP);
 INSERT INTO my_test_table_3 (id, name, created_at) VALUES (3, 'Alice', CURRENT_TIMESTAMP),(4, 'Bob', CURRENT_TIMESTAMP);
 SELECT * FROM my_test_table_3;
 DESCRIBE my_test_table_3;
 ```
 
 ## Проблемы
-
-1. AuthenticationFilter:240 - Unable to initialize FileSignerSecretProvider, falling back to use random secrets. Reason: Could not read signature secret file: /opt/app-user/hadoop-http-auth-signature-secret
-
-Решение 
-
-```sh
-head -c 32 /dev/urandom | base64 > /opt/keytabs/hadoop-http-auth-signature-secret
-```
-
-hadoop.http.authentication.signature.secret.file=/opt/keytabs/hadoop-http-auth-signature-secret
-
-docker-compose restart resourcemanager nodemanager

@@ -1,7 +1,0 @@
-version: '3.4'
-services:
-  krb5:
-    image: krb5:1.0.0-ubuntu-r2
-    build:
-      context: build/krb5/.
-      network: host

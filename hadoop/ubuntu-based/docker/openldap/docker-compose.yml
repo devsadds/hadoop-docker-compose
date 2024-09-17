@@ -1,8 +1,0 @@
-version: '3.4'
-services:
-  openldap:
-    image: openldap:v1.0.0
-    build:
-      context: build/openldap/.
-      args:
-        network: host
