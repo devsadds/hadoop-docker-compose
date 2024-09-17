@@ -153,6 +153,7 @@ services:
     volumes:
       - spark_staging:/opt/hadoop/.sparkStaging
       - "keytabs:/opt/keytabs"
+      - "./configs/krb/krb5.conf:/etc/krb5.conf"
     command: [ "yarn", "nodemanager" ]
     env_file:
       - ./hadoop.cfg
