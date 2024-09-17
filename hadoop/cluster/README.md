@@ -314,6 +314,12 @@ docker exec -it cluster-namenode-1 bash -c "kinit -kt /opt/keytabs/hdfs.keytab h
 docker-compose up -d
 ```
 
+## Snippets
+
+docker exec -it cluster-namenode-1 bash -c "kinit -kt /opt/keytabs/hdfs.keytab hdfs/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL;hdfs getconf -confKey dfs.namenode.rpc-address"
+docker exec -it cluster-namenode-1 bash -c "kinit -kt /opt/keytabs/hdfs.keytab hdfs/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL;hdfs dfs -ls hdfs://namenode:8020/user/hive/warehouse"
+
+
 ## Mans
 
 HADOOP_SECURE - https://hadoop.apache.org/docs/stable/hadoop-mapreduce-client/hadoop-mapreduce-client-core/EncryptedShuffle.html
