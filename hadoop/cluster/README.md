@@ -256,4 +256,25 @@ SELECT * FROM my_test_table_3;
 DESCRIBE my_test_table_3;
 ```
 
-## Проблемы
+Настойка datanode
+
+```sh
+docker exec -ti cluster-krb-client-1 bash
+```
+
+keytool -genkeypair -alias org.example.local -keyalg RSA -keysize 2048 -keystore keystore.jks -validity 1365
+
+
+
+```sh
+# Создать keystore 
+# !!Пароли ставим везеде admin_password!!
+cd /opt/keytabs
+# keystore с вашим ключом и самоподписанным сертификатом:
+keytool -genkeypair -alias org.example.local -keyalg RSA -keysize 2048 -keystore keystore.jks -validity 1365
+# Экспортируйте сертификат из keystore:
+keytool -export -alias org.example.local -keystore keystore.jks -file org.example.local.crt
+# Создайте truststore и импортируйте ранее экспортированный сертификат:
+keytool -import -alias org.example.local -file org.example.local.crt -keystore truststore.jks -noprompt
+chown -R 2002 /opt/keytabs
+```
