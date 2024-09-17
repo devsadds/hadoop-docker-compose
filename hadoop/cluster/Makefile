@@ -7,7 +7,7 @@ hadoop_first_start:
 	sleep 15;
 	
 testhive:
-	docker exec -it cluster-hive-server-1 bash -c "/opt/hive/bin/beeline -u jdbc:hive2://hive-server:10000 -f /tmp/test/script.sql"
+	docker exec -it cluster-hive-server-1 bash -c "kinit -kt /opt/keytabs/hive.keytab hive/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL;klist; /opt/hive/bin/beeline -u 'jdbc:hive2://hive-server:10000/default;principal=hive/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL' -f /tmp/test/script.sql"
 
 connect:
 	docker exec -it cluster-hive-server-1 bash -c "kinit -kt /opt/keytabs/hive.keytab hive/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL;klist; /opt/hive/bin/beeline -u 'jdbc:hive2://hive-server:10000/default;principal=hive/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL'"
