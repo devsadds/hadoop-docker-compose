@@ -21,30 +21,3 @@ docker_info:$(eval SHELL:=/usr/bin/env bash)
 docker_build:$(eval SHELL:=/usr/bin/env bash)
 		@echo "--------------- DOCKER_BUILD_DATE=$(DOCKER_BUILD_DATE) ---------------"
 		DOCKER_BUILDKIT=1 docker-compose build  --build-arg=TARGETOS="$(TARGETOS)" --build-arg=TARGETARCH="$(TARGETARCH)" --build-arg DOCKER_BUILD_DATE="$(DOCKER_BUILD_DATE)" --build-arg CUSTOM_REGISTRYS="$(c)"
-
-docker_tag:$(eval SHELL:=/usr/bin/env bash)
-		@echo "--------------- docker_tag started ---------------"
-		docker image tag  $(DOCKER_IMAGE_NAME) "$(DOCKER_ADDITIONAL_REGISTRY)/$(DOCKER_IMAGE_WITHOUT_REGISTRY)"
-		docker image tag  $(DOCKER_IMAGE_NAME) "$(DOCKER_ADDITIONAL_REGISTRY)/$(DOCKER_IMAGE_NAME_LATEST)"
-		for DOCKER_ADDITIONAL_REGISTRY_MIRROR in $(DOCKER_ADDITIONAL_REGISTRY_MIRRORS_LIST) ; do \
-			echo "Exec docker tag $(DOCKER_IMAGE_NAME) $$DOCKER_ADDITIONAL_REGISTRY_MIRROR/$(DOCKER_IMAGE_NAME)" ; \
-			docker tag  $(DOCKER_IMAGE_NAME) $$DOCKER_ADDITIONAL_REGISTRY_MIRROR/$(DOCKER_IMAGE_WITHOUT_REGISTRY) ; \
-			echo "Exec docker tag $(DOCKER_IMAGE_NAME) $$DOCKER_ADDITIONAL_REGISTRY_MIRROR/$(DOCKER_IMAGE_NAME_LATEST)" ; \
-			docker tag  $(DOCKER_IMAGE_NAME) $$DOCKER_ADDITIONAL_REGISTRY_MIRROR/$(DOCKER_IMAGE_NAME_LATEST) ; \
-		done
-		@echo "--------------- docker_tag finished ---------------"
-
-docker_push:$(eval SHELL:=/usr/bin/env bash)
-		@echo "--------------- docker_push started ---------------"
-		docker push "$(DOCKER_ADDITIONAL_REGISTRY)/$(DOCKER_IMAGE_WITHOUT_REGISTRY)"
-		for DOCKER_ADDITIONAL_REGISTRY_MIRROR in $(DOCKER_ADDITIONAL_REGISTRY_MIRRORS_LIST) ; do \
-			echo "Exec docker push $$DOCKER_ADDITIONAL_REGISTRY_MIRROR/$(DOCKER_IMAGE_NAME)" ; \
-			docker push $$DOCKER_ADDITIONAL_REGISTRY_MIRROR/$(DOCKER_IMAGE_WITHOUT_REGISTRY) ; \
-			echo "Docker pushed $$DOCKER_ADDITIONAL_REGISTRY_MIRROR/$(DOCKER_IMAGE_NAME)" ; \
-			docker push $$DOCKER_ADDITIONAL_REGISTRY_MIRROR/$(DOCKER_IMAGE_NAME_LATEST) ; \
-		done
-		for DOCKER_ADDITIONAL_REGISTRY_MIRROR in $(DOCKER_ADDITIONAL_REGISTRY_MIRRORS_LIST) ; do \
-			echo "Pushed images $$DOCKER_ADDITIONAL_REGISTRY_MIRROR/$(DOCKER_IMAGE_NAME)" ; \
-			echo "Pushed images $$DOCKER_ADDITIONAL_REGISTRY_MIRROR/$(DOCKER_IMAGE_NAME_LATEST)" ; \
-		done
-		@echo "--------------- docker_push finished ---------------"
