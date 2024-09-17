@@ -22,7 +22,7 @@ kdb5_ldap_util -D cn=admin,dc=org,dc=example,dc=local create -subtrees dc=org,dc
 Потом
 
 ```sh
-kdb5_ldap_util stashsrvpw -f /var/lib/openldappassword.keyfile cn=admin,dc=org,dc=example,dc=local
+kdb5_ldap_util stashsrvpw -f /var/lib/krb5kdc/openldappassword.keyfile cn=admin,dc=org,dc=example,dc=local
 #или
 #kdb5_ldap_util -D "cn=admin,dc=org,dc=example,dc=local" stashsrvpw -f /etc/krb5kdc/openldappassword.keyfile cn=admin,dc=org,dc=example,dc=local
 ```
@@ -50,7 +50,7 @@ kadmin.local -q "addprinc -randkey sa0000mmprod/odin-ha.org.example.local@ORG.EX
 После создания принципалов, создайте keytab-файлы для каждого из них:
 cd /opt/keytabs
 
-kadmin.local -q "ktadd -k hive.keytab hive/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL
+kadmin.local -q "ktadd -k hive.keytab hive/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
 kadmin.local -q "ktadd -k nn.keytab nn/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
 kadmin.local -q "ktadd -k dn.keytab dn/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
 kadmin.local -q "ktadd -k rm.keytab rm/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
