@@ -8,7 +8,6 @@ services:
       - "./configs/hive/log4j.properties:/opt/hive/conf/log4j.properties"
       - "./configs/hive/hive-env.sh:/opt/hive/conf/hive-env.sh"
       - "./configs/spark/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf"
-      - "./configs/spark/spark-env.sh:/opt/spark/conf/spark-env.sh"
       - spark_staging:/opt/hadoop/.sparkStaging
       - "./test:/tmp/test"
       - "keytabs:/opt/keytabs"
@@ -42,7 +41,6 @@ services:
       - "./configs/hive/hive-env.sh:/opt/hive/conf/hive-env.sh"
       - "./test:/tmp/test"
       - "./configs/spark/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf"
-      - "./configs/spark/spark-env.sh:/opt/spark/conf/spark-env.sh"
       - "keytabs:/opt/keytabs"
       - "./configs/krb/krb5.conf:/etc/krb5.conf"
     command: ["hive", "--service", "metastore"]
