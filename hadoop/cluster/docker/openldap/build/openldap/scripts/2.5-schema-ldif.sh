@@ -15,7 +15,7 @@ slaptest -f convert.dat -F .
 
 if [ $? -ne 0 ] ; then
     echo "slaptest conversion failed"
-    exit 
+    exit
 fi
 
 for schema in ${SCHEMAS} ; do
@@ -35,7 +35,7 @@ for schema in ${SCHEMAS} ; do
     sed -i '/modifiersName/ d' ${ldif_file}
     sed -i '/modifyTimestamp/ d' ${ldif_file}
     sed -i '/^ *$/d' ${ldif_file}
-
+    echo "exec mv ${ldif_file} ${schema_dir}"
     mv ${ldif_file} ${schema_dir}
 done
 

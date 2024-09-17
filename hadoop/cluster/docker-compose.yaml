@@ -25,6 +25,8 @@ services:
       - "10000:10000"
     networks:
       hadoop:
+        aliases:
+          - odin-ha.org.example.local
     depends_on:
       - hive-metastore
 
@@ -53,8 +55,6 @@ services:
       - hive-metastore-postgresql
     networks:
       hadoop:
-        aliases:
-          - odin-ha.omsk.example.com
 
   hive-metastore-init:
     image: ${HADOOP_BASE_IMAGE:-hadoop:3.3.5-ubuntu-r1}

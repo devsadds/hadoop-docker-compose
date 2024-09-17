@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 cd /etc/ldap/extraschema/ldap
 
-SCHEMAS="kerberos.schema sudo.schema"
-bash /tmp/2.5-schema-ldif.sh
-ls ~/ldap | egrep '(kerberos.ldif|sudo.ldif)'
+export SCHEMAS="kerberos.schema sudo.schema"
+bash 2.5-schema-ldif.sh
+ls /etc/ldap/extraschema/ldap | egrep '(kerberos.ldif|sudo.ldif)'
 
-mv ~/ldap/{kerberos.ldif,sudo.ldif} /etc/ldap/schema
+mv /etc/ldap/extraschema/ldap/{kerberos.ldif,sudo.ldif} /etc/ldap/schema
 chown openldap:openldap /etc/ldap/schema/{kerberos.ldif,sudo.ldif}
 chmod 0644 /etc/ldap/schema/{kerberos.ldif,sudo.ldif}
 
