@@ -155,3 +155,6 @@ klist
 ```
 
 ## 4. Hadoop and hive
+
+
+docker-compose up -d hive-metastore
