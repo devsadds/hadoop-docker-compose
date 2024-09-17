@@ -1,5 +1,9 @@
 # Full stack
 
+Описание. Это пример кластера hadoop с openlap и kerberos. С ним можно тестировать сервисы, которые работают с hive через kerberos(keytab's).
+
+Не смог настроить только, чтобы hive выполнял задания на выделенных контейнерах sparm-master и spark-worker. Ну и не всё автоматизировано, но работа с этим стеком дает понимаем интегарции и работы компонентов hadoop кластера.  
+
 ## 1. Prepare
 
 ```
@@ -76,11 +80,7 @@ cn=admin,dc=org,dc=example,dc=local
 admin_password
 ```
 
-
-
 ## 3. Kerberos config
-
-
 
 Запускаем контейнер с  переменной  `CONTAINER_DEBUG_ON: "true"`
 
@@ -123,9 +123,7 @@ export CONTAINER_DEBUG_ON="false"
 docker-compose up -d krb5
 ```
 
-
-
-## Пользователи
+## Пользователи kerberos
 
 
 ```sh
@@ -146,9 +144,10 @@ kadmin.local -q "addprinc -randkey hdfs@ORG.EXAMPLE.LOCAL"
 ```
 
 
-## Keytabs
+## Keytabs для пользователей
 
 После создания принципалов, создайте keytab-файлы для каждого из них:
+
 ```sh
 cd /opt/keytabs
 kadmin.local -q "ktadd -k hdfs.keytab hdfs/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
@@ -162,8 +161,8 @@ kadmin.local -q "ktadd -k timeline.keytab timeline/odin-ha.org.example.local@ORG
 kadmin.local -q "ktadd -k hh.keytab hh/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
 kadmin.local -q "ktadd -k sa0000mmprod.keytab sa0000mmprod@ORG.EXAMPLE.LOCAL"
 kadmin.local -q "ktadd -k sa0000mmprod-odin.keytab sa0000mmprod/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
-
 ```
+
 При создании увидим подобные сообщения
 
 ```sh
@@ -172,9 +171,11 @@ Entry for principal hdfs@ORG.EXAMPLE.LOCAL with kvno 2, encryption type aes128-c
 ```
 
 Создадим hadoop.http.authentication.signature.secret.file
+
 ```sh
 head -c 32 /dev/urandom | base64 > /opt/keytabs/hadoop-http-auth-signature-secret
 ```
+
 ```sh
 chown -R 2002 /opt/keytabs
 ```
@@ -193,8 +194,6 @@ klist
 ## 4. Hadoop and hive
 
 ```sh
-
-
 docker-compose up -d namenode
 docker-compose up -d datanode
 docker-compose up -d resourcemanager
@@ -228,23 +227,6 @@ docker exec -ti -u 0 cluster-krb-client-1 sh -c 'chown -R 2002 /opt/hive/conf'
 ```sh
 docker exec -ti cluster-krb-client-1 bash
 ```
-```sh
-cat<<'OEF'> /opt/hive/conf/log4j.properties
-# Set the default logging level for all loggers to INFO
-log4j.rootLogger=INFO, A1
-
-# Define the console appender
-log4j.appender.A1=org.apache.log4j.ConsoleAppender
-log4j.appender.A1.target=System.err
-log4j.appender.A1.layout=org.apache.log4j.PatternLayout
-log4j.appender.A1.layout.ConversionPattern=%d{ISO8601} %p %c: %m%n
-
-# Set the logging level for specific packages
-log4j.logger.org.apache.hadoop=INFO
-log4j.logger.org.apache.hive=INFO
-OEF
-```
-
 
 ```sh
 # запрашиваем Kerberos-билет для сервисного аккаунта nm/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL, используя ключи из файла /opt/keytabs/sa0000mmprod-odin.keytab
@@ -279,7 +261,7 @@ DESCRIBE my_test_table_3;
 docker exec -ti cluster-krb-client-1 bash
 ```
 
-Сгенирим нужные сертификаты - без них датанода не работает в  kerberos режиме
+Сгенирим нужные сертификаты - без них датанода не работает в kerberos  secure режиме
 
 ```sh
 # Создать keystore 
@@ -294,14 +276,13 @@ keytool -import -alias org.example.local -file org.example.local.crt -keystore t
 chown -R 2002 /opt/keytabs
 exit
 ```
-
 Теперь запускаем datanode
 
 ```sh
 docker-compose up datanode -d
 ```
 
-Создадим директорий в hdfs
+Создадим директории в hdfs
 
 ```sh
 docker exec -it cluster-namenode-1 bash -c "kinit -kt /opt/keytabs/hdfs.keytab hdfs/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL;hdfs dfs -mkdir -p /user/hive/warehouse /tmp/hive /user/hadoop/.sparkStaging /spark-jars /spark-logs"
@@ -314,6 +295,46 @@ docker exec -it cluster-namenode-1 bash -c "kinit -kt /opt/keytabs/hdfs.keytab h
 docker-compose up -d
 ```
 
+## Протестируем запись в hive
+
+
+```sh
+make testhive
+```
+
+Должно вернуть
+
+```sh
+0: jdbc:hive2://hive-server:10000/default> -- ???????????????? ?????????????????? ??????????????
+0: jdbc:hive2://hive-server:10000/default> DESCRIBE my_test_table_4;
+DEBUG : Acquired the compile lock.
+INFO  : Compiling command(queryId=hadoop_20240917144950_ec88bd5b-f27e-4f33-b102-231b629f89cc): DESCRIBE my_test_table_4
+INFO  : Concurrency mode is disabled, not creating a lock manager
+INFO  : Semantic Analysis Completed (retrial = false)
+INFO  : Returning Hive schema: Schema(fieldSchemas:[FieldSchema(name:col_name, type:string, comment:from deserializer), FieldSchema(name:data_type, type:string, comment:from deserializer), FieldSchema(name:comment, type:string, comment:from deserializer)], properties:null)
+INFO  : Completed compiling command(queryId=hadoop_20240917144950_ec88bd5b-f27e-4f33-b102-231b629f89cc); Time taken: 0.032 seconds
+INFO  : Concurrency mode is disabled, not creating a lock manager
+INFO  : Executing command(queryId=hadoop_20240917144950_ec88bd5b-f27e-4f33-b102-231b629f89cc): DESCRIBE my_test_table_4
+INFO  : Starting task [Stage-0:DDL] in serial mode
+INFO  : Completed executing command(queryId=hadoop_20240917144950_ec88bd5b-f27e-4f33-b102-231b629f89cc); Time taken: 0.028 seconds
+INFO  : OK
+INFO  : Concurrency mode is disabled, not creating a lock manager
+DEBUG : Shutting down query DESCRIBE my_test_table_4
++--------------+------------+----------+
+|   col_name   | data_type  | comment  |
++--------------+------------+----------+
+| id           | int        |          |
+| name         | string     |          |
+| description  | string     |          |
+| created_at   | timestamp  |          |
+| updated_at   | timestamp  |          |
+| status       | boolean    |          |
++--------------+------------+----------+
+6 rows selected (0.102 seconds)
+0: jdbc:hive2://hive-server:10000/default> Closing: 0: jdbc:hive2://hive-server:10000/default;principal=nn/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL
+
+```
+
 ## Snippets
 
 
@@ -323,9 +344,6 @@ docker exec -it cluster-namenode-1 bash -c "kinit -kt /opt/keytabs/hdfs.keytab h
 docker exec -it cluster-namenode-1 bash -c "kinit -kt /opt/keytabs/hdfs.keytab hdfs/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL;hdfs dfsadmin -safemode get"
 
 ```
-
-
-
 
 ## Mans
 
