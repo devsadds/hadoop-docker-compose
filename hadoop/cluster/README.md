@@ -155,6 +155,10 @@ kadmin.local -q "ktadd -k sa0000mmprod.keytab sa0000mmprod@ORG.EXAMPLE.LOCAL"
 kadmin.local -q "ktadd -k sa0000mmprod-odin.keytab sa0000mmprod/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL"
 ```
 
+```sh
+chown -R 2002 /opt/keytabs
+```
+
 ## Проверка аутентификации 
 
 ```sh
@@ -169,6 +173,12 @@ klist
 ## 4. Hadoop and hive
 
 ```sh
+
+
+docker-compose up -d namenode
+docker-compose up -d datanode
+docker-compose up -d resourcemanager
+docker-compose up -d nodemanager
 docker-compose up -d hive-metastore
 docker-compose up -d hive-server
 ```

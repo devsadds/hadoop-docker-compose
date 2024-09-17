@@ -301,8 +301,6 @@ services:
       - "./configs/krb/krb5.conf:/etc/krb5.conf"
       - "keytabs:/opt/keytabs"
     entrypoint: tail -f /dev/null
-    depends_on:
-      - openldap
     networks:
       hadoop:
 
