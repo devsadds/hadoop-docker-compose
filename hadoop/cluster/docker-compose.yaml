@@ -56,7 +56,7 @@ services:
     networks:
       hadoop:
         aliases:
-          - odin-ha.omsk.linux2be.com
+          - odin-ha.omsk.example.com
 
   hive-metastore-init:
     image: hadoop:3.3.5-ubuntu-r1
@@ -78,7 +78,7 @@ services:
       hadoop:
 
   hive-metastore-postgresql:
-    image: docker-registry.services.linux2be.com:443/devops-f/devops/postgresql:15.4.0.c
+    image: docker-registry.services.example.com:443/devops-f/devops/postgresql:15.4.0.c
     restart: always
     volumes:
       - "./configs/postgres:/opt/bitnami/postgresql/conf/conf.d"
@@ -224,19 +224,19 @@ services:
   openldap:
     image: openldap:1.5.0
     restart: always
-    container_name: openldap
-    hostname: "omsk.linux2be.com"
+    hostname: "openldap"
+    domainname: "example.local"
     ports:
-      - "389:389"
-      - "636:636"
+      - "1389:389"
+      - "1636:636"
     volumes:
       - "./configs/keytabs:/opt/keytabs"
       - "openldap_ldap_data:/var/lib/ldap"
       - "openldap_ldap_slap:/etc/ldap/slapd.d"
       - "openldap_ldap_certs:/container/service/slapd/assets/certs"
     environment:
-      LDAP_ORGANISATION: "Linux2be"
-      LDAP_DOMAIN: "omsk.linux2be.com"
+      LDAP_ORGANISATION: "Org"
+      LDAP_DOMAIN: "org.example.local"
       LDAP_ADMIN_PASSWORD: "admin_password"
       LDAP_READONLY_USER: "true"
       LDAP_READONLY_USER_USERNAME: "readonlyuser"
@@ -252,7 +252,8 @@ services:
     networks:
       hadoop:
         aliases:
-          - omsk.linux2be.com
+          - openldap
+          - org.example.local
 
   phpldapadmin:
     image: osixia/phpldapadmin:latest
@@ -260,13 +261,17 @@ services:
       PHPLDAPADMIN_LDAP_HOSTS: "openldap"
       PHPLDAPADMIN_HTTPS: "false"
     ports:
-      - "38080:80"
+      - "182:80"
     networks:
       hadoop:
     restart: always
 
   krb5:
     image: krb5:1.0.0-ubuntu-r2
+    restart: always
+    ports:
+      - "88:88"
+      - "749:749"
     volumes:
       - "./configs/krb/krb5.conf:/etc/krb5.conf"
       - "./configs/krb/kdc.conf:/etc/kerberos/krb5kdc/kdc.conf"
@@ -276,26 +281,20 @@ services:
       - "krb5kdc_database_1:/var/lib/krb5kdc"
       - "./configs/krb/openldappassword.keyfile:/etc/krb5kdc/openldappassword.keyfile"
     environment:
-      KERBEROS_REALM: "OMSK.LINUX2BE.COM"
+      KERBEROS_REALM: "ORG.EXAMPLE.LOCAL"
       LDAP_ADMIN_PASSWORD: "admin_password"
-      LDAP_SEARCH_BASE: "dc=omsk,dc=linux2be,dc=com"
+      LDAP_SEARCH_BASE: "dc=org,dc=example,dc=local"
       KRB5_KDC_PROFILE: "/etc/kerberos/krb5kdc/kdc.conf"
       KRB5_KDC_PASSWORD: "krb5"
-    domainname: omsk.linux2be.com
     #command: ["krb5kdc", "-d", "/var/lib/krb5kdc/database", "-n" ]
     command: ["krb5kdc", "-n" ]
-    #entrypoint: tail -f /dev/null
-    restart: always
-    ports:
-      - "88:88"
-      - "749:749"
     depends_on:
       - openldap
     networks:
       hadoop:
         aliases:
-          - kerberos.omsk.linux2be.com
-          - omsk.linux2be.com
+          - kerberos.org.example.local
+
 
 
 volumes:
