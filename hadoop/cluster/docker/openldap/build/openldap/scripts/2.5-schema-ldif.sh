@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCHEMAD=~/ldap
+SCHEMAD=/etc/ldap/extraschema/ldap
 
 tmpd=`mktemp -d`
 pushd ${tmpd} >>/dev/null

@@ -267,7 +267,7 @@ services:
       hadoop:
 
   krb5:
-    image: krb5:1.0.0-ubuntu-r2
+    image: ${KRB5_BASE_IMAGE:-krb5:1.0.0-ubuntu-r1}
     restart: no
     ports:
       - "88:88"
@@ -281,6 +281,7 @@ services:
       - "krb5kdc_database_1:/var/lib/krb5kdc"
       - "./configs/krb/openldappassword.keyfile:/etc/krb5kdc/openldappassword.keyfile"
     environment:
+      SKIP_DB_INIT: "true"
       KERBEROS_REALM: "ORG.EXAMPLE.LOCAL"
       LDAP_ADMIN_PASSWORD: "admin_password"
       LDAP_SEARCH_BASE: "dc=org,dc=example,dc=local"
