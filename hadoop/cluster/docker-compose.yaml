@@ -281,12 +281,12 @@ services:
       - "./configs/krb/openldappassword.keyfile:/etc/krb5kdc/openldappassword.keyfile"
     environment:
       SKIP_DB_INIT: "true"
+      CONTAINER_DEBUG_ON: "true"
       KERBEROS_REALM: "ORG.EXAMPLE.LOCAL"
       LDAP_ADMIN_PASSWORD: "admin_password"
       LDAP_SEARCH_BASE: "dc=org,dc=example,dc=local"
       KRB5_KDC_PROFILE: "/etc/kerberos/krb5kdc/kdc.conf"
       KRB5_KDC_PASSWORD: "krb5"
-    #command: ["krb5kdc", "-d", "/var/lib/krb5kdc/database", "-n" ]
     command: ["krb5kdc", "-n" ]
     depends_on:
       - openldap
