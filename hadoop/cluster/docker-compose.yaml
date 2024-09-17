@@ -11,7 +11,7 @@ services:
       - "./configs/spark/spark-env.sh:/opt/spark/conf/spark-env.sh"
       - spark_staging:/opt/hadoop/.sparkStaging
       - "./test:/tmp/test"
-      - "./configs/keytabs:/opt/keytabs"
+      - "keytabs:/opt/keytabs"
       - "./configs/krb/krb5.conf:/etc/krb5.conf"
     env_file:
       - ./hive.cfg
@@ -42,7 +42,7 @@ services:
       - "./test:/tmp/test"
       - "./configs/spark/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf"
       - "./configs/spark/spark-env.sh:/opt/spark/conf/spark-env.sh"
-      - "./configs/keytabs:/opt/keytabs"
+      - "keytabs:/opt/keytabs"
       - "./configs/krb/krb5.conf:/etc/krb5.conf"
     command: ["hive", "--service", "metastore"]
     environment:
@@ -61,7 +61,7 @@ services:
     restart: no
     volumes:
       - "./configs/hive/log4j.properties:/opt/hive/conf/log4j.properties"
-      - "./configs/keytabs:/opt/keytabs"
+      - "keytabs:/opt/keytabs"
       - "./configs/krb/krb5.conf:/etc/krb5.conf"
     depends_on:
       - hive-metastore-postgresql
@@ -100,7 +100,7 @@ services:
     volumes:
       - ./Makefile:/opt/hadoop/Makefile
       - hdfs_datanode:/data/hdfs
-      - "./configs/keytabs:/opt/keytabs"
+      - "keytabs:/opt/keytabs"
       - "./configs/krb/krb5.conf:/etc/krb5.conf"
     ports:
       - 29870:9870
@@ -121,7 +121,7 @@ services:
     volumes:
       - hdfs_datanode:/data/hdfs
       - spark_staging:/opt/hadoop/.sparkStaging
-      - "./configs/keytabs:/opt/keytabs"
+      - "keytabs:/opt/keytabs"
       - "./configs/krb/krb5.conf:/etc/krb5.conf"
     command: [ "hdfs", "datanode" ]
     env_file:
@@ -137,7 +137,7 @@ services:
     hostname: resourcemanager
     volumes:
       - spark_staging:/opt/hadoop/.sparkStaging
-      - "./configs/keytabs:/opt/keytabs"
+      - "keytabs:/opt/keytabs"
       - "./configs/krb/krb5.conf:/etc/krb5.conf"
     command: [ "yarn", "resourcemanager" ]
 
@@ -152,7 +152,7 @@ services:
     hostname: nodemanager
     volumes:
       - spark_staging:/opt/hadoop/.sparkStaging
-      - "./configs/keytabs:/opt/keytabs"
+      - "keytabs:/opt/keytabs"
     command: [ "yarn", "nodemanager" ]
     env_file:
       - ./hadoop.cfg
@@ -169,7 +169,7 @@ services:
     volumes:
       - "./configs/spark/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf"
       - "./configs/spark/spark-env.sh:/opt/spark/conf/spark-env.sh"
-      - "./configs/keytabs:/opt/keytabs"
+      - "keytabs:/opt/keytabs"
       - "./configs/krb/krb5.conf:/etc/krb5.conf"
     command: [ "spark-class", "org.apache.spark.deploy.master.Master" ]
 
@@ -190,7 +190,7 @@ services:
     volumes:
       - "./configs/spark/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf"
       - "./configs/spark/spark-env.sh:/opt/spark/conf/spark-env.sh"
-      - "./configs/keytabs:/opt/keytabs"
+      - "keytabs:/opt/keytabs"
       - "./configs/krb/krb5.conf:/etc/krb5.conf"
     command: [ "spark-class", "org.apache.spark.deploy.worker.Worker" , "spark://spark-master:7077"]
     env_file:
@@ -213,7 +213,7 @@ services:
     volumes:
       - "./configs/krb/krb5.conf:/etc/krb5.conf"
       - hdfs_historyserver:/data/hdfs/
-      - "./configs/keytabs:/opt/keytabs"
+      - "keytabs:/opt/keytabs"
     env_file:
       - ./hadoop.cfg
     environment:
@@ -230,7 +230,7 @@ services:
       - "1389:389"
       - "1636:636"
     volumes:
-      - "./configs/keytabs:/opt/keytabs"
+      - "keytabs:/opt/keytabs"
       - "openldap_ldap_data:/var/lib/ldap"
       - "openldap_ldap_slap:/etc/ldap/slapd.d"
       - "openldap_ldap_certs:/container/service/slapd/assets/certs"
@@ -275,7 +275,7 @@ services:
       - "./configs/krb/krb5.conf:/etc/krb5.conf"
       - "./configs/krb/kdc.conf:/etc/kerberos/krb5kdc/kdc.conf"
       - "./configs/krb/kadm5.acl:/etc/kerberos/krb5kdc/kadm5.acl"
-      - "./configs/keytabs:/opt/keytabs"
+      - "keytabs:/opt/keytabs"
       - "./logs/krb5:/var/log"
       - "krb5kdc_database_1:/var/lib/krb5kdc"
     environment:
@@ -299,7 +299,7 @@ services:
     restart: no
     volumes:
       - "./configs/krb/krb5.conf:/etc/krb5.conf"
-      - "./configs/keytabs:/opt/keytabs"
+      - "keytabs:/opt/keytabs"
     entrypoint: tail -f /dev/null
     depends_on:
       - openldap
@@ -316,6 +316,7 @@ volumes:
   openldap_ldap_slap:
   openldap_ldap_certs:
   krb5kdc_database_1:
+  keytabs:
 
 networks:
   hadoop:
