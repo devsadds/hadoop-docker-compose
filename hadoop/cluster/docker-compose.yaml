@@ -203,16 +203,16 @@ services:
     networks:
       hadoop:
 
-  historyserver:
+  timelineserver:
     image: ${HADOOP_BASE_IMAGE:-hadoop:3.3.5-ubuntu-r1}
     restart: no
-    command: [ "yarn", "historyserver" ]
+    command: [ "yarn", "timelineserver" ]
     ports:
       - 8188:8188
     entrypoint: tail -f /dev/null
     volumes:
       - "./configs/krb/krb5.conf:/etc/krb5.conf"
-      - hdfs_historyserver:/data/hdfs/
+      - hdfs_timelineserver:/data/hdfs/
       - "keytabs:/opt/keytabs"
     env_file:
       - ./hadoop.cfg
@@ -308,7 +308,7 @@ services:
 volumes:
   postgres-15-2-bitnami_data:
   hdfs_datanode:
-  hdfs_historyserver:
+  hdfs_timelineserver:
   spark_staging:
   openldap_ldap_data:
   openldap_ldap_slap:
