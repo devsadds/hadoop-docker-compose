@@ -337,6 +337,13 @@ DEBUG : Shutting down query DESCRIBE my_test_table_4
 
 ## Snippets
 
+Test hive - load sql
+
+```sh
+docker exec -it cluster-hive-server-1 bash -c "kinit -kt /opt/keytabs/nn.keytab nn/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL;klist; /opt/hive/bin/beeline -u 'jdbc:hive2://hive-server:10000/default;principal=nn/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL' -f /tmp/test/script.sql
+```
+
+Test hdfs
 
 ```sh
 docker exec -it cluster-namenode-1 bash -c "kinit -kt /opt/keytabs/hdfs.keytab hdfs/odin-ha.org.example.local@ORG.EXAMPLE.LOCAL;hdfs getconf -confKey dfs.namenode.rpc-address"
@@ -345,6 +352,14 @@ docker exec -it cluster-namenode-1 bash -c "kinit -kt /opt/keytabs/hdfs.keytab h
 
 ```
 
+
+
+
 ## Mans
 
-HADOOP_SECURE - https://hadoop.apache.org/docs/stable/hadoop-mapreduce-client/hadoop-mapreduce-client-core/EncryptedShuffle.html
+[HADOOP_SECURE_CONFIGURE](https://hadoop.apache.org/docs/stable/hadoop-mapreduce-client/hadoop-mapreduce-client-core/EncryptedShuffle.html)
+
+[Kerberos KDC с использованием OpenLDAP в качестве бэкэнда и аутен
+тификацией SASL GSSAPI](https://pro-ldap.ru/books/openldap-ubuntu-in-practice/kerberos.html)
+
+[Установка OpenLDAP](https://pro-ldap.ru/books/openldap-ubuntu-in-practice/init.html#s5)
